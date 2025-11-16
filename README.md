@@ -33,11 +33,11 @@ Entregar uma experiência ágil, organizada e confiável para quem precisa consu
 - <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="20" /> **TypeScript**
 - <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="20" /> **React**
 - <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vite/vite-original.svg" width="20" /> **Vite**
-- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" width="20" /> **Tailwind CSS**
-- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="20" /> **Node.js / NPM / Bun**
-- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/eslint/eslint-original.svg" width="20" /> **ESLint**
+- <img src="https://cdn.simpleicons.org/tailwindcss/06B6D4" width="20" /> **Tailwind CSS**
 - <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postcss/postcss-original.svg" width="20" /> **PostCSS**
-- <img src="https://raw.githubusercontent.com/shadcn/ui/main/apps/www/public/favicon.ico" width="20" /> **shadcn/ui**
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/eslint/eslint-original.svg" width="20" /> **ESLint**
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="20" /> **Node.js / NPM / Bun**
+- <img src="https://raw.githubusercontent.com/shadcn/ui/main/apps/www/public/android-chrome-192x192.png" width="20" /> **shadcn/ui**
 
 ---
 
