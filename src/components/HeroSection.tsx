@@ -181,7 +181,7 @@ const HeroSection = memo(() => {
                   }}
                 >
                   <Search className="h-6 w-6" />
-                  teste1
+                  CONSULTAR
                 </Button>
               </div>
             </div>
