@@ -122,6 +122,7 @@ const HeroSection = memo(() => {
                   className={`text-center lg:text-left ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1`}
                 />
                 <Button 
+                
                   data-track="consulta-principal"
                   variant="cta" 
                   className="h-14 sm:h-16 px-6 sm:px-8 text-base sm:text-lg font-bold w-full md:w-auto whitespace-nowrap"
