@@ -13,12 +13,12 @@ const HeroSection = memo(() => {
   const [inputFontSize, setInputFontSize] = useState("text-lg sm:text-xl md:text-2xl");
   const isMobile = useIsMobile();
   const { toast } = useToast();
-  
+
   // Preload critical images on component mount
   useEffect(() => {
     preloadCriticalImages();
   }, []);
-  
+
   useEffect(() => {
     const updateInputSize = () => {
       const width = window.innerWidth;
@@ -41,7 +41,7 @@ const HeroSection = memo(() => {
     window.addEventListener('resize', updateInputSize);
     return () => window.removeEventListener('resize', updateInputSize);
   }, []);
-  
+
   const stats = [
     {
       icon: Shield,
@@ -61,38 +61,38 @@ const HeroSection = memo(() => {
   ];
 
   return (
-    <section 
+    <section
       className="py-12 md:py-16 lg:py-20 bg-hero-bg relative overflow-hidden"
     >
       {/* Background do carro - responsivo */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
           backgroundImage: `url(/uploads/fd5932e4-78b9-4795-af60-28883b4d0463.png)`,
           backgroundSize: isMobile ? '80%' : window.innerWidth <= 1024 ? '70%' : '60%',
-          backgroundPosition: isMobile 
-            ? 'top 30% center' 
-            : window.innerWidth <= 1024 
+          backgroundPosition: isMobile
+            ? 'top 30% center'
+            : window.innerWidth <= 1024
               ? 'top 25% right'
               : 'top 20% right',
           backgroundRepeat: 'no-repeat',
           opacity: isMobile ? 0.6 : window.innerWidth <= 1024 ? 0.8 : 1
         }}
       />
-      
+
       {/* Gradiente degradê para mobile - lateral */}
       <div className="absolute inset-0 bg-gradient-to-r from-hero-bg via-hero-bg/80 to-transparent pointer-events-none z-[1] md:hidden"></div>
-      
+
       {/* Gradiente degradê para tablet - lateral e inferior */}
       <div className="absolute inset-0 bg-gradient-to-r from-hero-bg via-hero-bg/70 to-transparent pointer-events-none z-[1] hidden md:block lg:hidden"></div>
       <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-hero-bg via-hero-bg/80 to-transparent pointer-events-none z-[1] hidden md:block lg:hidden"></div>
-      
+
       {/* Gradiente degradê para desktop - inferior */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-hero-bg via-hero-bg/60 to-transparent pointer-events-none z-[1] hidden lg:block"></div>
-      
+
       {/* Gradiente adicional para blending suave */}
       <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-hero-bg/40 to-transparent pointer-events-none z-[1]"></div>
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left side - Content */}
@@ -115,75 +115,39 @@ const HeroSection = memo(() => {
             {/* Search form */}
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 w-full max-w-2xl mx-auto lg:mx-0 border border-white/20">
               <div id="consulta-principal" className="flex flex-col md:flex-row gap-3 sm:gap-4">
-                <Input 
-                  placeholder="Digite Placa, Renavam ou Chassi" 
+                <Input
+                  placeholder="Digite Placa, Renavam ou Chassi"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   className={`text-center lg:text-left ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1`}
                 />
-                <Button 
-                
+                <Button
                   data-track="consulta-principal"
-                  variant="cta" 
+                  variant="cta"
                   className="h-14 sm:h-16 px-6 sm:px-8 text-base sm:text-lg font-bold w-full md:w-auto whitespace-nowrap"
-                  onClick={() => {
-                    console.log('Botão consultar clicado');
-                    console.log('Valor do input:', inputValue);
-                    
-                    if (inputValue.trim()) {
-                      const message = `Olá! Gostaria de fazer uma consulta veicular para: ${inputValue.trim()}`;
-                      const phoneNumber = "5511921021578";
-                      
-                      // Try multiple WhatsApp URL variations
-                      const urls = [
-                        `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`,
-                      ];
-                      
-                      // Try opening different URLs until one works
-                      const tryUrl = (index: number) => {
-                        if (index >= urls.length) {
-                        // Fallback: copy number to clipboard
-                        navigator.clipboard.writeText(phoneNumber).then(() => {
-                          toast({
-                            title: "WhatsApp não pôde ser aberto",
-                            description: `Número copiado: ${phoneNumber}`,
-                            duration: 4000,
-                          });
-                        }).catch(() => {
-                          toast({
-                            title: "Contato WhatsApp",
-                            description: `WhatsApp: ${phoneNumber}`,
-                            duration: 4000,
-                          });
-                        });
-                          return;
-                        }
-                        
-                        try {
-                          const newWindow = window.open(urls[index], '_blank');
-                          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-                            // If blocked, try next URL after a short delay
-                            setTimeout(() => tryUrl(index + 1), 100);
-                          }
-                        } catch (error) {
-                          // Try next URL if this one fails
-                          tryUrl(index + 1);
-                        }
-                      };
-                      
-                      tryUrl(0);
-                    } else {
-                      console.log('Input vazio, mostrando alerta...');
-                      toast({
-                        title: "🚗 Ops! Dados necessários",
-                        description: "Informe a placa, RENAVAM ou chassi do seu veículo para prosseguir com a consulta.",
-                        duration: 4000,
-                      });
-                    }
-                  }}
+                  asChild
                 >
-                  <Search className="h-6 w-6" />
-                  CONSULTAR
+                  <a
+                    href={`https://wa.me/5511921021578?text=${encodeURIComponent(`Olá! Gostaria de fazer uma consulta veicular para: ${inputValue.trim() || "..."}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => {
+                      if (!inputValue.trim()) {
+                        e.preventDefault();
+                        toast({
+                          title: "🚗 Ops! Dados necessários",
+                          description: "Informe a placa, RENAVAM ou chassi do seu veículo para prosseguir com a consulta.",
+                          duration: 4000,
+                        });
+                      } else {
+                        console.log('Botão consultar clicado');
+                        console.log('Valor do input:', inputValue);
+                      }
+                    }}
+                  >
+                    <Search className="h-6 w-6" />
+                    CONSULTAR
+                  </a>
                 </Button>
               </div>
             </div>
@@ -193,11 +157,11 @@ const HeroSection = memo(() => {
             </p>
 
             {/* Video button */}
-            <Button 
-              variant="link" 
+            <Button
+              variant="link"
               className="p-0 h-auto text-primary font-medium group transition-all duration-300 ease-out hover:no-underline"
               onClick={() => {
-                document.getElementById('video-explainer')?.scrollIntoView({ 
+                document.getElementById('video-explainer')?.scrollIntoView({
                   behavior: 'smooth',
                   block: 'center'
                 });
@@ -207,7 +171,7 @@ const HeroSection = memo(() => {
                 <div className="relative w-12 h-12 bg-primary rounded-full flex items-center justify-center transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/25">
                   <div className="absolute inset-0 bg-primary rounded-full opacity-20 scale-100 group-hover:scale-150 group-hover:opacity-0 transition-all duration-500 ease-out"></div>
                   <svg className="w-5 h-5 text-primary-foreground ml-0.5 z-10 relative transition-transform duration-300 ease-out group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M8 5v14l11-7z"/>
+                    <path d="M8 5v14l11-7z" />
                   </svg>
                 </div>
                 <div className="text-left">
@@ -222,9 +186,9 @@ const HeroSection = memo(() => {
           <ScrollReveal delay={200}>
             <div className="flex justify-center items-center h-full mt-8 lg:mt-0">
               <div className="relative group cursor-pointer">
-                <img 
-                  src="/uploads/f5472cd0-a719-4870-a846-6a0f274a9336.png" 
-                  alt="Especialista em consultas veiculares - ConfereVeicular" 
+                <img
+                  src="/uploads/f5472cd0-a719-4870-a846-6a0f274a9336.png"
+                  alt="Especialista em consultas veiculares - ConfereVeicular"
                   className="w-full max-w-sm sm:max-w-md lg:max-w-2xl h-auto object-contain transition-all duration-700 ease-out transform group-hover:scale-105 group-hover:-translate-y-2 filter group-hover:brightness-110 group-hover:drop-shadow-2xl"
                 />
                 {/* Subtle glow effect on hover */}
@@ -254,8 +218,8 @@ const HeroSection = memo(() => {
             </ScrollReveal>
           ))}
         </div>
-      </div>
-    </section>
+      </div >
+    </section >
   );
 });
 

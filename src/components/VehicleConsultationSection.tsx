@@ -36,7 +36,7 @@ const VehicleConsultationSection = memo(() => {
         info: [
           "Informações Retornadas:",
           "Placa",
-          "Renavam", 
+          "Renavam",
           "Chassi",
           "Roubo ou Furto",
           "Número do Motor",
@@ -59,7 +59,7 @@ const VehicleConsultationSection = memo(() => {
         ]
       },
       "renavam": {
-        title: "Consulta de Renavam", 
+        title: "Consulta de Renavam",
         info: [
           "Informações Retornadas:",
           "Renavam",
@@ -83,7 +83,7 @@ const VehicleConsultationSection = memo(() => {
           "Marca/modelo/versão",
           "Outras informações relevantes",
         ]
-       },
+      },
       "emitir-crlv": {
         title: "Consulta Veicular",
         info: [
@@ -97,7 +97,7 @@ const VehicleConsultationSection = memo(() => {
           "Outras informações relevantes",
         ]
       },
-       "proprietario-atual": {
+      "proprietario-atual": {
         title: "Consulta Proprietário Atual",
         info: [
           "Informações Retornadas:",
@@ -202,7 +202,7 @@ const VehicleConsultationSection = memo(() => {
       "multas": {
         title: "Consulta de Multas",
         info: [
-         "Informações Retornadas:",
+          "Informações Retornadas:",
           "Licenciamento",
           "Valor do licenciamento",
           "IPVA",
@@ -246,11 +246,11 @@ const VehicleConsultationSection = memo(() => {
       }
     };
     return consultationInfo[cardId] || {
-  title: "Consulta não encontrada",
-  info: [
-    "Tipo de consulta não identificado.",
-    "Entre em contato para mais informações."
-  ]
+      title: "Consulta não encontrada",
+      info: [
+        "Tipo de consulta não identificado.",
+        "Entre em contato para mais informações."
+      ]
     };
   };
   // Specific consultation images mapping with new generated images
@@ -262,17 +262,17 @@ const VehicleConsultationSection = memo(() => {
     "crv": "/uploads/29750269-c40b-45ed-b098-02431cf4f20f.png",
     "proprietario-atual": consultaProprietarioImg,
     "historico-proprietario": "/uploads/cfe6442e-6c06-4719-8ef7-b9e95b093416.png",
-    
+
     // Histórico do Veículo  
     "leilao": consultaLeilaoImg,
     "roubo-furto": rouboFurtoImg,
     "sinistro": consultaSinistroImg,
     "comunicacao-venda": comunicacaoVendaImg,
-    
+
     // Documentação e Emissões
     "emitir-crv": "/uploads/a09458a2-7806-474e-84ea-178ca895ae42.png",
     "emitir-crlv": `/uploads/999b4a9e-e214-4b28-84c9-973c58f23a65.png?t=${Date.now()}`,
-    
+
     // Multas e Débitos
     "gravame": "/uploads/5c13d18f-5a0a-4a7f-960e-0ad0a5fd4299.png",
     "debitos": consultaDebitosImg,
@@ -289,13 +289,13 @@ const VehicleConsultationSection = memo(() => {
         image: consultationImages["placa"],
       },
       {
-        id: "chassi", 
+        id: "chassi",
         title: "Consulta de Chassi",
         image: consultationImages["chassi"],
       },
       {
         id: "renavam",
-        title: "Consulta de Renavam", 
+        title: "Consulta de Renavam",
         image: consultationImages["renavam"],
       },
       {
@@ -338,7 +338,7 @@ const VehicleConsultationSection = memo(() => {
         image: consultationImages["emitir-crv"],
       },
       {
-        id: "emitir-crlv", 
+        id: "emitir-crlv",
         title: "Emitir CRLV",
         image: consultationImages["emitir-crlv"],
       }
@@ -377,76 +377,11 @@ const VehicleConsultationSection = memo(() => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [cardImageLoaded, setCardImageLoaded] = useState(false);
     const consultationInfo = getConsultationInfo(card.id);
-    
-    const handleWhatsAppClick = useCallback(() => {
-      const getWhatsAppMessage = (cardId: string) => {
-        const messages: Record<string, string> = {
-          "placa": "Olá, gostaria de consultar uma placa!",
-          "chassi": "Olá, gostaria de consultar um chassi!",
-          "renavam": "Olá, gostaria de consultar um renavam!",
-          "crv": "Olá, gostaria de consultar um CRV!",
-          "proprietario-atual": "Olá, gostaria de consultar o proprietário atual!",
-          "historico-proprietario": "Olá, gostaria de consultar o histórico de proprietário!",
-          "leilao": "Olá, gostaria de consultar leilão!",
-          "roubo-furto": "Olá, gostaria de consultar roubo/furto!",
-          "sinistro": "Olá, gostaria de consultar sinistro!",
-          "comunicacao-venda": "Olá, gostaria de consultar comunicação de venda!",
-          "emitir-crv": "Olá, gostaria de emitir CRV!",
-          "emitir-crlv": "Olá, gostaria de emitir CRLV!",
-          "gravame": "Olá, gostaria de consultar gravame!",
-          "debitos": "Olá, gostaria de consultar débitos!",
-          "multas": "Olá, gostaria de consultar multas!",
-          "renainf": "Olá, gostaria de consultar renainf!",
-          "renajud": "Olá, gostaria de consultar renajud!"
-        };
-        return messages[cardId] || "Olá, gostaria de fazer uma consulta veicular!";
-      };
-      
-      const message = getWhatsAppMessage(card.id);
-      const phoneNumber = "5511921021578";
-      
-      // Try multiple WhatsApp URL variations
-      const urls = [
-        `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`,
-      ];
-      
-      // Try opening different URLs until one works
-      const tryUrl = (index: number) => {
-        if (index >= urls.length) {
-          // Fallback: copy number to clipboard
-          navigator.clipboard.writeText(phoneNumber).then(() => {
-            toast({
-              title: "WhatsApp não pôde ser aberto",
-              description: `Número copiado: ${phoneNumber}`,
-              duration: 4000,
-            });
-          }).catch(() => {
-            toast({
-              title: "Contato WhatsApp",
-              description: `WhatsApp: ${phoneNumber}`,
-              duration: 4000,
-            });
-          });
-          return;
-        }
-        
-        try {
-          const newWindow = window.open(urls[index], '_blank');
-          if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
-            // If blocked, try next URL after a short delay
-            setTimeout(() => tryUrl(index + 1), 100);
-          }
-        } catch (error) {
-          // Try next URL if this one fails
-          tryUrl(index + 1);
-        }
-      };
-      
-      tryUrl(0);
-    }, [card.id, toast]);
-    
+
+
+
     return (
-      <div 
+      <div
         className="group opacity-0 animate-fade-in relative h-56 md:h-64 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 cursor-pointer border border-accent/10"
         style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'forwards' }}
       >
@@ -454,7 +389,7 @@ const VehicleConsultationSection = memo(() => {
         {!cardImageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-muted/40 to-muted/60 animate-pulse" />
         )}
-        
+
         {/* Card background image */}
         <LazyImage
           src={card.image}
@@ -463,10 +398,10 @@ const VehicleConsultationSection = memo(() => {
           onLoad={() => setCardImageLoaded(true)}
           eager={index < 3}
         />
-        
+
         {/* Enhanced gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 group-hover:from-black/95 group-hover:via-black/60 transition-all duration-500" />
-        
+
         {/* Content container */}
         <div className="relative h-full flex flex-col justify-between p-6 md:p-8 text-white">
           <div className="flex-1 flex items-start">
@@ -474,11 +409,11 @@ const VehicleConsultationSection = memo(() => {
               {card.title}
             </h3>
           </div>
-          
+
           <div className="flex items-center justify-start">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button 
+                <Button
                   className="bg-accent hover:bg-accent/90 text-white font-bold py-3 px-6 rounded-xl w-auto transition-all duration-300 text-sm md:text-base shadow-lg hover:shadow-xl hover:scale-105"
                 >
                   <span className="relative z-10">Quero uma consulta</span>
@@ -487,9 +422,9 @@ const VehicleConsultationSection = memo(() => {
               <DialogContent className="w-[95vw] max-w-[480px] max-h-[90vh] flex flex-col bg-gradient-to-br from-card to-card/95 border border-accent/20 shadow-2xl rounded-2xl p-4">
                 <DialogHeader className="text-center pb-2 shrink-0">
                   <DialogTitle className="text-lg sm:text-xl font-bold text-primary mb-1 flex items-center justify-center gap-2">
-                    <img 
-                      src="/uploads/c044ffa8-9ef0-478d-8ad6-c3f980adca44.png" 
-                      alt="ConfereVeicular Logo" 
+                    <img
+                      src="/uploads/c044ffa8-9ef0-478d-8ad6-c3f980adca44.png"
+                      alt="ConfereVeicular Logo"
                       className="w-6 h-6"
                     />
                     {consultationInfo.title}
@@ -498,54 +433,54 @@ const VehicleConsultationSection = memo(() => {
                     Informações completas e atualizadas sobre o veículo
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="flex-1 min-h-0 overflow-y-auto space-y-3 px-1">
-                   {/* Specific content for CRV consultation - Documentação section */}
-                   {card.id === 'crv' && (
-                     <div className="bg-accent/5 rounded-lg p-3 border border-accent/10">
-                       <h4 className="font-semibold text-primary text-sm mb-2">Documentação</h4>
-                       <div className="flex flex-col items-center gap-2">
-                         <img 
-                           src="/uploads/a62780f5-0882-41d8-9fab-983f3dc2509b.png" 
-                           alt="Exemplo de CRV - Certificado de Registro de Veículo" 
-                           className="w-full max-w-xs h-28 object-cover rounded-lg border"
-                         />
-                         <p className="text-xs text-muted-foreground text-center">
-                           CRV - Certificado de Registro de Veículo (documento azul)
-                         </p>
-                       </div>
-                     </div>
-                   )}
-                   
-                   <div className="bg-accent/5 rounded-lg p-3 border border-accent/10">
-                     <h4 className="font-semibold text-primary text-sm mb-2 flex items-center gap-2">
-                       <div className="w-4 h-4 flex items-center justify-center">
-                         {!imageLoaded && (
-                           <div className="w-4 h-4 bg-primary rounded-full animate-pulse"></div>
-                         )}
-                         <img 
-                           src="/uploads/ee7054b1-46e7-411c-934e-cdb2ae069ef2.png" 
-                           alt="Info Icon" 
-                           className={`w-4 h-4 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                           onLoad={() => setImageLoaded(true)}
-                           style={{ display: imageLoaded ? 'block' : 'none' }}
-                         />
-                       </div>
-                       {consultationInfo.info[0]}
-                     </h4>
-                     <div className="grid gap-1.5">
-                       {consultationInfo.info.slice(1).map((item: string, idx: number) => (
-                         <div key={idx} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-accent/10 transition-colors duration-200">
-                           <div className="w-1.5 h-1.5 bg-gradient-to-r from-accent to-primary rounded-full shrink-0"></div>
-                           <span className="text-foreground text-xs font-medium leading-tight">{item}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
+                  {/* Specific content for CRV consultation - Documentação section */}
+                  {card.id === 'crv' && (
+                    <div className="bg-accent/5 rounded-lg p-3 border border-accent/10">
+                      <h4 className="font-semibold text-primary text-sm mb-2">Documentação</h4>
+                      <div className="flex flex-col items-center gap-2">
+                        <img
+                          src="/uploads/a62780f5-0882-41d8-9fab-983f3dc2509b.png"
+                          alt="Exemplo de CRV - Certificado de Registro de Veículo"
+                          className="w-full max-w-xs h-28 object-cover rounded-lg border"
+                        />
+                        <p className="text-xs text-muted-foreground text-center">
+                          CRV - Certificado de Registro de Veículo (documento azul)
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-accent/5 rounded-lg p-3 border border-accent/10">
+                    <h4 className="font-semibold text-primary text-sm mb-2 flex items-center gap-2">
+                      <div className="w-4 h-4 flex items-center justify-center">
+                        {!imageLoaded && (
+                          <div className="w-4 h-4 bg-primary rounded-full animate-pulse"></div>
+                        )}
+                        <img
+                          src="/uploads/ee7054b1-46e7-411c-934e-cdb2ae069ef2.png"
+                          alt="Info Icon"
+                          className={`w-4 h-4 transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                          onLoad={() => setImageLoaded(true)}
+                          style={{ display: imageLoaded ? 'block' : 'none' }}
+                        />
+                      </div>
+                      {consultationInfo.info[0]}
+                    </h4>
+                    <div className="grid gap-1.5">
+                      {consultationInfo.info.slice(1).map((item: string, idx: number) => (
+                        <div key={idx} className="flex items-center gap-2 p-1.5 rounded-md hover:bg-accent/10 transition-colors duration-200">
+                          <div className="w-1.5 h-1.5 bg-gradient-to-r from-accent to-primary rounded-full shrink-0"></div>
+                          <span className="text-foreground text-xs font-medium leading-tight">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                  
+
                 <div className="flex flex-col sm:flex-row gap-2 pt-3 shrink-0">
-                  <Button 
+                  <Button
                     variant="outline"
                     className="w-full sm:flex-1 border-2 border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all duration-300 h-10 rounded-lg text-sm"
                     onClick={() => setDialogOpen(false)}
@@ -553,22 +488,51 @@ const VehicleConsultationSection = memo(() => {
                     Fechar
                   </Button>
                   <Button
-                    onClick={handleWhatsAppClick}
+                    asChild
                     className="w-full sm:flex-1 inline-flex items-center justify-center gap-1 bg-primary hover:bg-primary/90 text-white font-bold py-2 px-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] h-10 text-sm"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M20 8v6M23 11l-3 3-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Falar com especialista
+                    <a
+                      href={`https://wa.me/5511921021578?text=${encodeURIComponent(
+                        (() => {
+                          const messages: Record<string, string> = {
+                            "placa": "Olá, gostaria de consultar uma placa!",
+                            "chassi": "Olá, gostaria de consultar um chassi!",
+                            "renavam": "Olá, gostaria de consultar um renavam!",
+                            "crv": "Olá, gostaria de consultar um CRV!",
+                            "proprietario-atual": "Olá, gostaria de consultar o proprietário atual!",
+                            "historico-proprietario": "Olá, gostaria de consultar o histórico de proprietário!",
+                            "leilao": "Olá, gostaria de consultar leilão!",
+                            "roubo-furto": "Olá, gostaria de consultar roubo/furto!",
+                            "sinistro": "Olá, gostaria de consultar sinistro!",
+                            "comunicacao-venda": "Olá, gostaria de consultar comunicação de venda!",
+                            "emitir-crv": "Olá, gostaria de emitir CRV!",
+                            "emitir-crlv": "Olá, gostaria de emitir CRLV!",
+                            "gravame": "Olá, gostaria de consultar gravame!",
+                            "debitos": "Olá, gostaria de consultar débitos!",
+                            "multas": "Olá, gostaria de consultar multas!",
+                            "renainf": "Olá, gostaria de consultar renainf!",
+                            "renajud": "Olá, gostaria de consultar renajud!"
+                          };
+                          return messages[card.id] || "Olá, gostaria de fazer uma consulta veicular!";
+                        })()
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M20 8v6M23 11l-3 3-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Falar com especialista
+                    </a>
                   </Button>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
         </div>
-        
+
         {/* Hover effect overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-accent/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       </div>
@@ -584,12 +548,12 @@ const VehicleConsultationSection = memo(() => {
         <div className="absolute top-1/2 left-10 w-32 h-32 bg-accent/3 rounded-full blur-2xl"></div>
         <div className="absolute top-1/4 right-10 w-24 h-24 bg-primary/3 rounded-full blur-2xl"></div>
       </div>
-      
+
       <div className="container mx-auto px-4 relative">
         <ScrollReveal className="text-center mb-16">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-6 relative">
-              Escolha o Tipo de 
+              Escolha o Tipo de
               <span className="text-primary ml-3">
                 Consulta
               </span>
@@ -605,8 +569,8 @@ const VehicleConsultationSection = memo(() => {
           <Tabs defaultValue="registro" className="w-full">
             <div className="flex justify-center mb-12">
               <TabsList className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 bg-gradient-to-r from-background/80 via-background/90 to-background/80 backdrop-blur-sm border border-accent/20 shadow-xl rounded-2xl p-2 h-auto max-w-5xl">
-                <TabsTrigger 
-                  value="registro" 
+                <TabsTrigger
+                  value="registro"
                   className="text-sm font-semibold px-6 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:scale-105"
                 >
                   <div className="text-center">
@@ -614,7 +578,7 @@ const VehicleConsultationSection = memo(() => {
                     <div className="text-xs opacity-80 mt-1">Dados básicos do veículo</div>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="situacao"
                   className="text-sm font-semibold px-6 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:scale-105"
                 >
@@ -623,7 +587,7 @@ const VehicleConsultationSection = memo(() => {
                     <div className="text-xs opacity-80 mt-1">Situação e histórico</div>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="eventos"
                   className="text-sm font-semibold px-6 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:scale-105"
                 >
@@ -632,7 +596,7 @@ const VehicleConsultationSection = memo(() => {
                     <div className="text-xs opacity-80 mt-1">Emissões e documentos</div>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="sos"
                   className="text-sm font-semibold px-6 py-4 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 hover:scale-105"
                 >
