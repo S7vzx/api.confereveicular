@@ -23,17 +23,17 @@ const HeroSection = memo(() => {
     const updateInputSize = () => {
       const width = window.innerWidth;
       if (width <= 320) {
-        setInputFontSize("text-[10px]");
+        setInputFontSize("text-xs");
       } else if (width <= 375) {
-        setInputFontSize("text-xs");
+        setInputFontSize("text-sm");
       } else if (width <= 480) {
-        setInputFontSize("text-xs");
+        setInputFontSize("text-sm");
       } else if (width <= 768) {
-        setInputFontSize("text-base");
-      } else if (width <= 1024) {
         setInputFontSize("text-lg");
-      } else {
+      } else if (width <= 1024) {
         setInputFontSize("text-xl");
+      } else {
+        setInputFontSize("text-2xl");
       }
     };
 
@@ -116,10 +116,10 @@ const HeroSection = memo(() => {
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 w-full max-w-2xl mx-auto lg:mx-0 border border-white/20">
               <div id="consulta-principal" className="flex flex-col md:flex-row gap-3 sm:gap-4">
                 <Input
-                  placeholder="Digite Placa, Renavam ou Chassi"
+                  placeholder="Digite sua placa"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className={`text-center lg:text-left ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1`}
+                  className={`text-center ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1`}
                 />
                 <Button
                   data-track="consulta-principal"

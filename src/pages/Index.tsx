@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import LazySection from "@/components/LazySection";
 
 // Lazy load components below the fold
-const VehicleConsultationSection = lazy(() => import("@/components/VehicleConsultationSection"));
+
 const VehicleInfoSection = lazy(() => import("@/components/VehicleInfoSection"));
 const VideoExplainerSection = lazy(() => import("@/components/VideoExplainerSection"));
 const SocialProofSection = lazy(() => import("@/components/SocialProofSection"));
@@ -37,17 +37,12 @@ const Index = () => {
         <HeroSection />
         <LazySection fallback={<SectionFallback />}>
           <Suspense fallback={<SectionFallback />}>
-            <VehicleConsultationSection />
+            <VideoExplainerSection />
           </Suspense>
         </LazySection>
         <LazySection fallback={<SectionFallback />}>
           <Suspense fallback={<SectionFallback />}>
             <VehicleInfoSection />
-          </Suspense>
-        </LazySection>
-        <LazySection fallback={<SectionFallback />}>
-          <Suspense fallback={<SectionFallback />}>
-            <VideoExplainerSection />
           </Suspense>
         </LazySection>
         <LazySection fallback={<SectionFallback />}>
