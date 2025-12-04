@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { consultarPlaca, VehicleData } from "@/services/api";
+import Footer from "@/components/Footer";
 
 export default function ResultadoConsulta() {
     const [searchParams] = useSearchParams();
@@ -67,9 +68,19 @@ export default function ResultadoConsulta() {
     if (!veiculo) return null;
 
     return (
-        <div className="min-h-screen bg-[#f0f2f5] py-8 md:py-12">
-            <div className="container mx-auto px-4 max-w-5xl">
-                <Button variant="ghost" onClick={() => navigate("/")} className="mb-6 text-primary hover:text-primary/80 pl-0 hover:bg-transparent">
+        <div className="min-h-screen bg-[#f0f2f5] flex flex-col">
+            {/* Header Azul com Logo */}
+            <div className="bg-primary pb-48">
+                <div className="container mx-auto px-4 flex justify-center pb-6">
+                    <div className="bg-white rounded-b-2xl px-12 py-6 shadow-lg">
+                        <img src="/uploads/logo nova.png" alt="CONFERE VEICULAR" className="h-16" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Conteúdo */}
+            <div className="container mx-auto px-4 max-w-5xl -mt-40 flex-grow">
+                <Button variant="ghost" onClick={() => navigate("/")} className="mb-6 text-white hover:text-white/80 pl-0 hover:bg-transparent">
                     <ArrowLeft className="h-4 w-4 mr-2" />Voltar para busca
                 </Button>
 
@@ -94,7 +105,7 @@ export default function ResultadoConsulta() {
                             </div>
                         </div>
                         <div className="flex-1 flex items-center justify-center relative bg-white">
-                            <span className="text-5xl font-black tracking-widest font-mono text-black">
+                            <span className="text-5xl font-black tracking-widest text-black whitespace-nowrap" style={{ fontFamily: 'MercosulPlate, sans-serif' }}>
                                 {(() => {
                                     const clean = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
                                     if (clean.length !== 7) return placa; // Retorna como está se já tiver formatação ou tamanho diferente
@@ -108,7 +119,6 @@ export default function ResultadoConsulta() {
                     </div>
                 </div>
 
-                {/* Grid Informações */}
                 {/* Grid Informações */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <InfoCard title="Principais" icon={Car} iconColor="text-green-600" iconBg="bg-green-50">
@@ -133,148 +143,160 @@ export default function ResultadoConsulta() {
                     </InfoCard>
                 </div>
 
+                {/* Grid Informações Adicionais */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <InfoCard title="Proprietário" icon={User} iconColor="text-primary" iconBg="bg-blue-50">
+                        <InfoRow label="Nome do Proprietário" isLocked />
+                        <InfoRow label="Doc. Proprietário (Parcial)" isLocked />
+                        <InfoRow label="Tipo Doc. Proprietário" isLocked />
+                        <InfoRow label="Tipo Doc. Faturado" value={veiculo.extra?.tipo_doc_faturado || '-'} />
+                        <InfoRow label="Estado (UF) Faturado" value={veiculo.extra?.uf_faturado || '-'} />
+                    </InfoCard>
+
+                    <InfoCard title="Outros" icon={Info} iconColor="text-green-600" iconBg="bg-green-50">
+                        <InfoRow label="Situação Roubo/Furto" isLocked />
+                        <InfoRow label="Município" value={veiculo.municipio || '-'} />
+                        <InfoRow label="Estado (UF)" value={veiculo.uf || '-'} />
+                        <InfoRow label="Segmento" value={veiculo.segmento || '-'} />
+                        <InfoRow label="Sub Segmento" value={veiculo.sub_segmento || '-'} />
+                    </InfoCard>
+                </div>
+
                 {/* Tabela FIPE */}
-                {/* Tabela FIPE */}
-                {veiculo.fipe && veiculo.fipe.dados && veiculo.fipe.dados.length > 0 && (
-                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
-                        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-                            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-                                <DollarSign className="w-6 h-6 text-green-600" />
+                {
+                    veiculo.fipe && veiculo.fipe.dados && veiculo.fipe.dados.length > 0 && (
+                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+                            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+                                    <DollarSign className="w-6 h-6 text-green-600" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-800">Tabela FIPE</h2>
+                                    <p className="text-sm text-gray-500">Aqui estão os valores do seu veículo</p>
+                                </div>
                             </div>
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-800">Tabela FIPE</h2>
-                                <p className="text-sm text-gray-500">Aqui estão os valores do seu veículo</p>
-                            </div>
+                            <Accordion type="single" collapsible className="w-full">
+                                {veiculo.fipe.dados.map((fipeData, index) => (
+                                    <AccordionItem key={index} value={`item-${index}`} className="border-b-0 mb-2">
+                                        <AccordionTrigger className="bg-gray-50 px-4 rounded-lg hover:no-underline hover:bg-gray-100">
+                                            {fipeData.texto_modelo} - {fipeData.combustivel}
+                                        </AccordionTrigger>
+                                        <AccordionContent className="px-4 pt-4 pb-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-600">Mês de referência:</span>
+                                                <span className="font-bold text-gray-800">{fipeData.mes_referencia}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className="text-gray-600">Valor estimado:</span>
+                                                <span className="font-bold text-green-600 text-lg">{fipeData.texto_valor}</span>
+                                            </div>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                            </Accordion>
                         </div>
-                        <Accordion type="single" collapsible className="w-full">
-                            {veiculo.fipe.dados.map((fipeData, index) => (
-                                <AccordionItem key={index} value={`item-${index}`} className="border-b-0 mb-2">
-                                    <AccordionTrigger className="bg-gray-50 px-4 rounded-lg hover:no-underline hover:bg-gray-100">
-                                        {fipeData.texto_modelo} - {fipeData.combustivel}
-                                    </AccordionTrigger>
-                                    <AccordionContent className="px-4 pt-4 pb-2">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600">Mês de referência:</span>
-                                            <span className="font-bold text-gray-800">{fipeData.mes_referencia}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-gray-600">Valor estimado:</span>
-                                            <span className="font-bold text-green-600 text-lg">{fipeData.texto_valor}</span>
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            ))}
-                        </Accordion>
-                    </div>
-                )}
+                    )
+                }
 
                 {/* Banner Promocional Premium */}
-                <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 min-h-[420px] flex items-center mb-8">
+                <div className="relative rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 mb-16">
                     <div className="absolute inset-0 opacity-5">
                         <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: `radial-gradient(circle at 20% 50%, white 1px, transparent 1px)`, backgroundSize: '40px 40px' }}></div>
                     </div>
-                    <div className="absolute top-0 right-0 w-[50%] h-full hidden md:block">
+                    <div className="absolute top-0 right-0 w-[40%] h-full hidden md:block">
                         <svg className="absolute top-0 right-0 h-full" viewBox="0 0 400 600" fill="none" preserveAspectRatio="none">
                             <path d="M0 0 Q 200 300 0 600 L 400 600 L 400 0 Z" fill="white" opacity="0.95" />
                         </svg>
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-transparent pointer-events-none"></div>
 
-                    <div className="container mx-auto px-6 md:px-12 lg:px-16 relative z-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                            <div className="text-white space-y-6 py-12 md:py-16">
-                                <div className="space-y-4">
-                                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight">
-                                        Libere as<br />informações<br /><span className="text-accent drop-shadow-lg">agora mesmo!</span>
+                    <div className="container mx-auto px-6 md:px-12 relative z-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-8 md:py-10">
+                            <div className="text-white space-y-5">
+                                <div className="space-y-3">
+                                    <h2 className="text-3xl md:text-4xl font-black leading-tight">
+                                        Libere as informações<br /><span className="text-accent drop-shadow-lg">agora mesmo!</span>
                                     </h2>
-                                    <p className="text-blue-100 text-lg md:text-xl font-light max-w-md">
-                                        Nome do proprietário, Renavam, Chassi, Município, UF e muito mais.
+                                    <p className="text-blue-100 text-base font-light max-w-md">
+                                        Nome do proprietário, Renavam, Chassi e muito mais.
                                     </p>
                                 </div>
 
-                                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 max-w-md">
-                                    <div className="flex items-end gap-6">
+                                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 max-w-sm">
+                                    <div className="flex items-center justify-between">
                                         <div>
-                                            <p className="text-blue-200 text-sm font-medium mb-1 line-through">De R$ 27,99</p>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-accent text-2xl font-bold">R$</span>
-                                                <span className="text-accent text-7xl font-black tracking-tighter drop-shadow-xl">12,99</span>
+                                            <p className="text-blue-200 text-xs line-through mb-1">De R$ 27,99</p>
+                                            <div className="flex items-baseline gap-1">
+                                                <span className="text-accent text-xl font-bold">R$</span>
+                                                <span className="text-accent text-5xl font-black tracking-tighter">12,99</span>
                                             </div>
                                         </div>
-                                        <div className="mb-2">
-                                            <div className="bg-accent/20 text-accent px-4 py-2 rounded-lg border border-accent/30">
-                                                <div className="flex items-center gap-2 text-xs font-bold">
-                                                    <Timer className="w-4 h-4" /><span>Oferta limitada</span>
-                                                </div>
+                                        <div className="bg-accent/20 text-accent px-3 py-1.5 rounded-lg border border-accent/30">
+                                            <div className="flex items-center gap-1 text-xs font-bold">
+                                                <Timer className="w-3.5 h-3.5" /><span>Oferta limitada</span>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-wrap gap-4 text-sm">
-                                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                                        <ShieldCheck className="w-4 h-4 text-accent" /><span className="text-white/90 font-medium">Seguro e confiável</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                                        <CheckCircle2 className="w-4 h-4 text-accent" /><span className="text-white/90 font-medium">+1 milhão de clientes</span>
                                     </div>
                                 </div>
 
                                 <Button
-                                    className="bg-accent hover:bg-accent/90 text-primary font-bold text-xl h-16 px-10 rounded-xl w-full md:w-auto shadow-2xl hover:shadow-accent/50 transition-all transform hover:-translate-y-1 hover:scale-105 flex items-center justify-center gap-3 group"
+                                    className="bg-accent hover:bg-accent/90 text-primary font-bold text-lg h-12 px-8 rounded-xl w-full md:w-auto shadow-xl hover:shadow-accent/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
                                     onClick={() => console.log("Checkout")}
                                 >
-                                    <Lock className="w-6 h-6 group-hover:scale-110 transition-transform" />Liberar por R$ 12,99
+                                    <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />Liberar por R$ 12,99
                                 </Button>
 
-                                <p className="text-blue-200/80 text-xs">Ambiente 100% seguro • Satisfação garantida</p>
+                                <div className="flex items-center gap-3 text-xs text-blue-200/80">
+                                    <div className="flex items-center gap-1">
+                                        <ShieldCheck className="w-3.5 h-3.5" /><span>Seguro</span>
+                                    </div>
+                                    <span>•</span>
+                                    <div className="flex items-center gap-1">
+                                        <CheckCircle2 className="w-3.5 h-3.5" /><span>+1M clientes</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="hidden md:flex items-center justify-center relative h-full">
-                                <div className="absolute w-[500px] h-[500px]">
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 rounded-full blur-2xl"></div>
-                                </div>
-                                <div className="relative z-10 bg-white/90 backdrop-blur-sm p-12 rounded-full shadow-2xl">
-                                    <Car className="w-40 h-40 text-primary/20" strokeWidth={1} />
-                                </div>
+                            <div className="hidden md:flex items-center justify-center relative">
+                                <img
+                                    src="/uploads/banner-homem-carro.png"
+                                    alt="Consulta Veicular - Renavam, Chassi, Situação"
+                                    className="w-full max-w-md h-auto object-contain"
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <p className="text-xs text-center text-muted-foreground mt-8">
-                    Este site utiliza dados e informações de fontes públicas. As informações apresentadas são meramente informativas.
-                </p>
             </div>
+
+            <Footer />
         </div>
     );
 }
 
 const InfoCard = ({ title, icon: Icon, iconColor, iconBg, children }: any) => (
-    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8 hover:shadow-lg transition-shadow duration-300">
         <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-            <div className={`w-12 h-12 rounded-full ${iconBg} flex items-center justify-center`}>
+            <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
                 <Icon className={`w-6 h-6 ${iconColor}`} />
             </div>
             <div>
                 <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-                <p className="text-sm text-gray-500">Aqui estão os {title.toLowerCase()} dados do veículo</p>
+                <p className="text-sm text-gray-500">Dados do veículo</p>
             </div>
         </div>
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-3">{children}</div>
     </div>
 );
 
 const InfoRow = ({ label, value, isLocked = false }: { label: string, value?: string, isLocked?: boolean }) => (
-    <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors px-2 rounded-lg">
-        <span className="font-semibold text-gray-700">{label}</span>
+    <div className="flex items-center justify-between py-3 px-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+        <span className="font-semibold text-gray-700 text-sm md:text-base">{label}</span>
         {isLocked ? (
-            <Badge variant="secondary" className="bg-slate-800 text-white hover:bg-slate-700 gap-1.5 py-1 px-3">
-                <Lock className="w-3 h-3" /> Info. Bloqueada!
+            <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200 gap-1.5 py-1 px-3 border border-gray-200">
+                <Lock className="w-3 h-3" /> <span className="text-xs font-bold">BLOQUEADO</span>
             </Badge>
         ) : (
-            <span className="text-gray-600 font-medium text-right">{value || '-'}</span>
+            <span className="text-gray-600 font-medium text-right text-sm md:text-base">{value || '-'}</span>
         )}
     </div>
 );

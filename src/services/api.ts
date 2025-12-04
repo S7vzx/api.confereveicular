@@ -21,6 +21,8 @@ export interface VehicleData {
     marcaModelo?: string;
     mensagemRetorno?: string;
     origem?: string;
+    segmento?: string;
+    sub_segmento?: string;
     // Extra nested data
     extra: {
         combustivel?: string;
@@ -31,6 +33,8 @@ export interface VehicleData {
         especie?: string;
         tipo_veiculo?: string;
         tipo_carroceria?: string;
+        tipo_doc_faturado?: string;
+        uf_faturado?: string;
         // Additional optional fields observed in API response
         ano_fabricacao?: string;
         ano_modelo?: string;
