@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import SobreNos from "./pages/SobreNos";
+import ResultadoConsulta from "./pages/resultado";
 import NotFound from "./pages/NotFound";
 import swManager from '@/utils/swRegistration';
 import performanceMonitor from '@/utils/performanceMonitor';
@@ -18,14 +19,14 @@ const App = () => {
   useEffect(() => {
     // Start performance monitoring
     performanceMonitor.startTransaction('app_initialization')();
-    
+
     // Register service worker
     swManager.register({
       enableBackgroundSync: true,
       onReady: () => console.log('✅ Service Worker ready'),
       onUpdate: () => console.log('🔄 App update available')
     });
-    
+
     // Preload critical images
     preloadCriticalImages().catch(console.warn);
   }, []);
@@ -39,6 +40,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/sobre-nos" element={<SobreNos />} />
+            <Route path="/resultado" element={<ResultadoConsulta />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -6,13 +6,16 @@ import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { useState, useEffect, memo } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { preloadCriticalImages } from "@/utils/performance";
 
 const HeroSection = memo(() => {
   const [inputValue, setInputValue] = useState("");
   const [inputFontSize, setInputFontSize] = useState("text-lg sm:text-xl md:text-2xl");
+  const [inputLineHeight, setInputLineHeight] = useState("3.5rem");
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Preload critical images on component mount
   useEffect(() => {
@@ -23,17 +26,23 @@ const HeroSection = memo(() => {
     const updateInputSize = () => {
       const width = window.innerWidth;
       if (width <= 320) {
-        setInputFontSize("text-xs");
+        setInputFontSize("!text-lg");
+        setInputLineHeight("3.5rem");
       } else if (width <= 375) {
-        setInputFontSize("text-sm");
+        setInputFontSize("!text-xl");
+        setInputLineHeight("3.5rem");
       } else if (width <= 480) {
-        setInputFontSize("text-sm");
+        setInputFontSize("!text-xl");
+        setInputLineHeight("3.5rem");
       } else if (width <= 768) {
-        setInputFontSize("text-lg");
+        setInputFontSize("!text-2xl");
+        setInputLineHeight("4rem");
       } else if (width <= 1024) {
-        setInputFontSize("text-xl");
+        setInputFontSize("!text-3xl");
+        setInputLineHeight("4rem");
       } else {
-        setInputFontSize("text-2xl");
+        setInputFontSize("!text-4xl");
+        setInputLineHeight("4rem");
       }
     };
 
@@ -116,38 +125,77 @@ const HeroSection = memo(() => {
             <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-3 w-full max-w-2xl mx-auto lg:mx-0 border border-white/20">
               <div id="consulta-principal" className="flex flex-col md:flex-row gap-3 sm:gap-4">
                 <Input
-                  placeholder="Digite sua placa"
+                  placeholder="ABC-1C34"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  className={`text-center ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1`}
+                  onChange={(e) => {
+                    // Remove tudo que não é letra ou número e limita a 7 caracteres
+                    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+                    setInputValue(value);
+                  }}
+                  style={{
+                    paddingTop: '1.25rem',
+                    paddingBottom: '1.25rem',
+                    lineHeight: '2'
+                  }}
+                  className={`text-center ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1 placeholder:text-xl placeholder:sm:text-2xl placeholder:md:text-3xl placeholder:lg:text-4xl placeholder:font-bold`}
                 />
                 <Button
                   data-track="consulta-principal"
                   variant="cta"
                   className="h-14 sm:h-16 px-6 sm:px-8 text-base sm:text-lg font-bold w-full md:w-auto whitespace-nowrap"
-                  asChild
-                >
-                  <a
-                    href={`https://wa.me/5511921021578?text=${encodeURIComponent(`Olá! Gostaria de fazer uma consulta veicular para: ${inputValue.trim() || "..."}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => {
-                      if (!inputValue.trim()) {
-                        e.preventDefault();
+                  onClick={() => {
+                    let finalPlate = inputValue.trim();
+
+                    // Regex para validar padrão Mercosul: LLLNLNN (Ex: ABC1C34)
+                    const mercosulRegex = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+                    // Regex para validar padrão Antigo: LLLNNNN (Ex: ABC1234)
+                    const oldFormatRegex = /^[A-Z]{3}[0-9]{4}$/;
+
+                    if (!finalPlate) {
+                      toast({
+                        title: "🚗 Ops! Dados necessários",
+                        description: "Por favor, digite a placa do veículo.",
+                        duration: 4000,
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+
+                    // Se for padrão antigo, converte para Mercosul
+                    if (oldFormatRegex.test(finalPlate)) {
+                      const conversionTable: { [key: string]: string } = {
+                        '0': 'A', '1': 'B', '2': 'C', '3': 'D', '4': 'E',
+                        '5': 'F', '6': 'G', '7': 'H', '8': 'I', '9': 'J'
+                      };
+                      const chars = finalPlate.split('');
+                      const fifthChar = chars[4]; // O 5º caractere (índice 4) é o que muda
+                      if (conversionTable[fifthChar]) {
+                        chars[4] = conversionTable[fifthChar];
+                        finalPlate = chars.join('');
+
                         toast({
-                          title: "🚗 Ops! Dados necessários",
-                          description: "Informe a placa, RENAVAM ou chassi do seu veículo para prosseguir com a consulta.",
+                          title: "🔄 Placa Convertida",
+                          description: `Placa antiga ${inputValue} convertida para padrão Mercosul: ${finalPlate}`,
                           duration: 4000,
                         });
-                      } else {
-                        console.log('Botão consultar clicado');
-                        console.log('Valor do input:', inputValue);
                       }
-                    }}
-                  >
-                    <Search className="h-6 w-6" />
-                    CONSULTAR
-                  </a>
+                    } else if (!mercosulRegex.test(finalPlate)) {
+                      toast({
+                        title: "🚫 Formato Inválido",
+                        description: "A placa deve estar no padrão Mercosul (Ex: ABC1C34) ou Antigo (Ex: ABC1234).",
+                        duration: 4000,
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+
+                    // Se chegou aqui, a placa é válida (já convertida se necessário)
+                    // Redireciona para a página de resultados
+                    navigate(`/resultado?placa=${finalPlate}`);
+                  }}
+                >
+                  <Search className="h-6 w-6 mr-2" />
+                  CONSULTAR
                 </Button>
               </div>
             </div>
