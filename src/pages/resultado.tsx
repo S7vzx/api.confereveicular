@@ -1,28 +1,70 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { consultarPlaca, VehicleData } from "@/services/api";
 
 export default function ResultadoConsulta() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const placa = searchParams.get("placa") || "";
 
-    const dadosPublicos = {
-        placa: placa,
-        marca: "VOLKSWAGEN",
-        modelo: "GOL 1.0 FLEX",
-        ano: "2020/2021",
-        cor: "PRATA",
-        combustivel: "FLEX",
-        procedencia: "NACIONAL"
-    };
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [veiculo, setVeiculo] = useState<VehicleData | null>(null);
 
     useEffect(() => {
-        if (!placa) navigate("/");
+        if (!placa) {
+            navigate("/");
+            return;
+        }
+
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const data = await consultarPlaca(placa);
+                setVeiculo(data);
+            } catch (err: any) {
+                setError(err.message || "Erro ao consultar placa. Tente novamente.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [placa, navigate]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#f0f2f5] flex flex-col items-center justify-center p-4">
+                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                <h2 className="text-xl font-bold text-gray-700">Consultando base de dados...</h2>
+                <p className="text-gray-500">Aguarde um momento enquanto buscamos as informações.</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-[#f0f2f5] flex flex-col items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg text-center">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-red-600" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">Ops! Algo deu errado</h2>
+                    <p className="text-gray-600 mb-6">{error}</p>
+                    <Button onClick={() => navigate("/")} className="w-full">
+                        Voltar e tentar novamente
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!veiculo) return null;
 
     return (
         <div className="min-h-screen bg-[#f0f2f5] py-8 md:py-12">
@@ -38,7 +80,7 @@ export default function ResultadoConsulta() {
                             Resultado da sua <br />consulta!
                         </h1>
                         <p className="text-primary font-medium text-sm md:text-base uppercase tracking-wide">
-                            VOCÊ CONSULTOU UM: <span className="font-bold">{dadosPublicos.marca}/{dadosPublicos.modelo.split(' ')[0]}</span>
+                            VOCÊ CONSULTOU UM: <span className="font-bold">{veiculo.MARCA}/{veiculo.MODELO.split(' ')[0]}</span>
                         </p>
                     </div>
 
@@ -52,80 +94,79 @@ export default function ResultadoConsulta() {
                             </div>
                         </div>
                         <div className="flex-1 flex items-center justify-center relative bg-white">
-                            <span className="text-5xl font-black tracking-widest font-mono text-black">{placa.slice(0, 3)} {placa.slice(3)}</span>
+                            <span className="text-5xl font-black tracking-widest font-mono text-black">
+                                {(() => {
+                                    const clean = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                                    if (clean.length !== 7) return placa; // Retorna como está se já tiver formatação ou tamanho diferente
+
+                                    // Formata sempre com hífen após o 3º caractere (ABC-1D34 ou ABC-1234)
+                                    return `${clean.slice(0, 3)}-${clean.slice(3)}`;
+                                })()}
+                            </span>
                             <span className="absolute bottom-1 left-2 font-bold text-[10px] text-black/80 leading-none">BR</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Grid Informações */}
+                {/* Grid Informações */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <InfoCard title="Principais" icon={Car} iconColor="text-green-600" iconBg="bg-green-50">
-                        <InfoRow label="Placa" value={dadosPublicos.placa} />
-                        <InfoRow label="Marca/Modelo" value={`${dadosPublicos.marca}/${dadosPublicos.modelo.split(' ')[0]}`} />
-                        <InfoRow label="Marca" value={dadosPublicos.marca} />
-                        <InfoRow label="Modelo" value={dadosPublicos.modelo} />
-                        <InfoRow label="Ano Fabricação" value={dadosPublicos.ano.split('/')[0]} />
-                        <InfoRow label="Ano Modelo" value={dadosPublicos.ano.split('/')[1] || dadosPublicos.ano} />
-                        <InfoRow label="Cor" value={dadosPublicos.cor} />
-                        <InfoRow label="Combustível" value={dadosPublicos.combustivel} />
+                        <InfoRow label="Placa" value={veiculo.placa || placa} />
+                        <InfoRow label="Marca/Modelo" value={`${veiculo.MARCA}/${veiculo.MODELO}`} />
+                        <InfoRow label="Marca" value={veiculo.MARCA} />
+                        <InfoRow label="Modelo" value={veiculo.MODELO} />
+                        <InfoRow label="Ano Fabricação" value={veiculo.extra.ano_fabricacao || veiculo.ano} />
+                        <InfoRow label="Ano Modelo" value={veiculo.extra.ano_modelo || veiculo.anoModelo} />
+                        <InfoRow label="Cor" value={veiculo.cor} />
+                        <InfoRow label="Combustível" value={veiculo.extra.combustivel} />
                     </InfoCard>
 
                     <InfoCard title="Identificação" icon={FileText} iconColor="text-blue-600" iconBg="bg-blue-50">
                         <InfoRow label="Renavam" isLocked />
                         <InfoRow label="Chassi" isLocked />
                         <InfoRow label="Motor" isLocked />
-                        <InfoRow label="Procedência" value={dadosPublicos.procedencia} />
+                        <InfoRow label="Procedência" value={veiculo.extra.procedencia || veiculo.origem || "NACIONAL"} />
                         <InfoRow label="Câmbio" isLocked />
                         <InfoRow label="Carroceria" isLocked />
-                        <InfoRow label="Categoria" value="PARTICULAR" />
+                        <InfoRow label="Categoria" value={veiculo.extra.especie || "PARTICULAR"} />
                     </InfoCard>
                 </div>
 
                 {/* Tabela FIPE */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
-                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-                        <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-                            <DollarSign className="w-6 h-6 text-green-600" />
+                {/* Tabela FIPE */}
+                {veiculo.fipe && veiculo.fipe.dados && veiculo.fipe.dados.length > 0 && (
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
+                        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+                            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-green-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Tabela FIPE</h2>
+                                <p className="text-sm text-gray-500">Aqui estão os valores do seu veículo</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-800">Tabela FIPE</h2>
-                            <p className="text-sm text-gray-500">Aqui estão os valores do seu veículo</p>
-                        </div>
+                        <Accordion type="single" collapsible className="w-full">
+                            {veiculo.fipe.dados.map((fipeData, index) => (
+                                <AccordionItem key={index} value={`item-${index}`} className="border-b-0 mb-2">
+                                    <AccordionTrigger className="bg-gray-50 px-4 rounded-lg hover:no-underline hover:bg-gray-100">
+                                        {fipeData.texto_modelo} - {fipeData.combustivel}
+                                    </AccordionTrigger>
+                                    <AccordionContent className="px-4 pt-4 pb-2">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-600">Mês de referência:</span>
+                                            <span className="font-bold text-gray-800">{fipeData.mes_referencia}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center mt-2">
+                                            <span className="text-gray-600">Valor estimado:</span>
+                                            <span className="font-bold text-green-600 text-lg">{fipeData.texto_valor}</span>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </div>
-                    <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="item-1" className="border-b-0 mb-2">
-                            <AccordionTrigger className="bg-gray-50 px-4 rounded-lg hover:no-underline hover:bg-gray-100">
-                                {dadosPublicos.modelo} - Gasolina
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 pt-4 pb-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Mês de referência:</span>
-                                    <span className="font-bold text-gray-800">Dezembro/2025</span>
-                                </div>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-gray-600">Valor estimado:</span>
-                                    <span className="font-bold text-green-600 text-lg">R$ 45.900,00</span>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                        <AccordionItem value="item-2" className="border-b-0">
-                            <AccordionTrigger className="bg-gray-50 px-4 rounded-lg hover:no-underline hover:bg-gray-100">
-                                {dadosPublicos.modelo} - Álcool
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 pt-4 pb-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Mês de referência:</span>
-                                    <span className="font-bold text-gray-800">Dezembro/2025</span>
-                                </div>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-gray-600">Valor estimado:</span>
-                                    <span className="font-bold text-green-600 text-lg">R$ 44.500,00</span>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                </div>
+                )}
 
                 {/* Banner Promocional Premium */}
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/90 min-h-[420px] flex items-center mb-8">

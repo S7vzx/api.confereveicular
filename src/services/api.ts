@@ -1,0 +1,77 @@
+
+export interface VehicleData {
+    // Basic vehicle identifiers
+    MARCA: string;
+    MODELO: string;
+    SUBMODELO: string;
+    VERSAO: string;
+    ano: string;
+    anoModelo: string;
+    cor: string;
+    municipio: string;
+    uf: string;
+    situacao: string;
+    // Plate information
+    placa?: string;
+    placa_modelo_antigo?: string;
+    placa_modelo_novo?: string;
+    // Additional descriptive fields
+    logo?: string;
+    marca?: string;
+    marcaModelo?: string;
+    mensagemRetorno?: string;
+    origem?: string;
+    // Extra nested data
+    extra: {
+        combustivel?: string;
+        chassi?: string;
+        renavam?: string;
+        motor?: string;
+        procedencia?: string; // "NACIONAL" or "IMPORTADO"
+        especie?: string;
+        tipo_veiculo?: string;
+        tipo_carroceria?: string;
+        // Additional optional fields observed in API response
+        ano_fabricacao?: string;
+        ano_modelo?: string;
+        caixa_cambio?: string;
+    };
+    // FIPE data if available
+    fipe?: {
+        dados: Array<{
+            codigo_fipe: string;
+            mes_referencia: string;
+            texto_valor: string;
+            combustivel: string;
+            texto_modelo: string;
+            ano_modelo: string;
+        }>;
+    };
+}
+
+const API_TOKEN = "d467f819227d45912eb4321f5244d91e";
+const BASE_URL = "https://wdapi2.com.br/consulta";
+
+export async function consultarPlaca(placa: string): Promise<VehicleData> {
+    // Remove any non-alphanumeric characters for the API request
+    const cleanPlate = placa.replace(/[^a-zA-Z0-9]/g, "");
+
+    try {
+        const response = await fetch(`${BASE_URL}/${cleanPlate}/${API_TOKEN}`);
+
+        if (!response.ok) {
+            throw new Error(`Erro na requisição: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.erro) {
+            throw new Error(data.mensagem || "Erro ao consultar placa");
+        }
+
+        return data;
+    } catch (error) {
+        console.error("Erro ao consultar API:", error);
+        throw error;
+    }
+}

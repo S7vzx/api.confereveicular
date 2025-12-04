@@ -128,9 +128,16 @@ const HeroSection = memo(() => {
                   placeholder="ABC-1C34"
                   value={inputValue}
                   onChange={(e) => {
-                    // Remove tudo que não é letra ou número e limita a 7 caracteres
-                    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
-                    setInputValue(value);
+                    // Remove tudo que não é letra ou número
+                    const clean = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+
+                    // Formata com hífen sempre após o 3º caractere (ABC-1C34 ou ABC-1234)
+                    let formatted = clean;
+                    if (clean.length > 3) {
+                      formatted = clean.slice(0, 3) + '-' + clean.slice(3);
+                    }
+
+                    setInputValue(formatted);
                   }}
                   style={{
                     paddingTop: '1.25rem',
@@ -144,7 +151,8 @@ const HeroSection = memo(() => {
                   variant="cta"
                   className="h-14 sm:h-16 px-6 sm:px-8 text-base sm:text-lg font-bold w-full md:w-auto whitespace-nowrap"
                   onClick={() => {
-                    let finalPlate = inputValue.trim();
+                    // Remove o hífen para validação
+                    let finalPlate = inputValue.trim().replace(/-/g, '');
 
                     // Regex para validar padrão Mercosul: LLLNLNN (Ex: ABC1C34)
                     const mercosulRegex = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
@@ -161,6 +169,14 @@ const HeroSection = memo(() => {
                       return;
                     }
 
+                    // Função para formatar com hífen (ABC-1C34)
+                    const formatWithHyphen = (plate: string) => {
+                      if (plate.length === 7) {
+                        return plate.slice(0, 3) + '-' + plate.slice(3);
+                      }
+                      return plate;
+                    };
+
                     // Se for padrão antigo, converte para Mercosul
                     if (oldFormatRegex.test(finalPlate)) {
                       const conversionTable: { [key: string]: string } = {
@@ -175,14 +191,14 @@ const HeroSection = memo(() => {
 
                         toast({
                           title: "🔄 Placa Convertida",
-                          description: `Placa antiga ${inputValue} convertida para padrão Mercosul: ${finalPlate}`,
+                          description: `Placa antiga ${inputValue.replace(/-/g, '')} convertida para padrão Mercosul: ${formatWithHyphen(finalPlate)}`,
                           duration: 4000,
                         });
                       }
                     } else if (!mercosulRegex.test(finalPlate)) {
                       toast({
                         title: "🚫 Formato Inválido",
-                        description: "A placa deve estar no padrão Mercosul (Ex: ABC1C34) ou Antigo (Ex: ABC1234).",
+                        description: "A placa deve estar no padrão Mercosul (Ex: ABC-1C34) ou Antigo (Ex: ABC-1234).",
                         duration: 4000,
                         variant: "destructive"
                       });
@@ -190,8 +206,8 @@ const HeroSection = memo(() => {
                     }
 
                     // Se chegou aqui, a placa é válida (já convertida se necessário)
-                    // Redireciona para a página de resultados
-                    navigate(`/resultado?placa=${finalPlate}`);
+                    // Redireciona para a página de resultados com a placa formatada
+                    navigate(`/resultado?placa=${formatWithHyphen(finalPlate)}`);
                   }}
                 >
                   <Search className="h-6 w-6 mr-2" />
