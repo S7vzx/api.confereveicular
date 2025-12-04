@@ -161,8 +161,8 @@ const HeroSection = memo(() => {
 
                     if (!finalPlate) {
                       toast({
-                        title: "🚗 Ops! Dados necessários",
-                        description: "Por favor, digite a placa do veículo.",
+                        title: "Campo obrigatório",
+                        description: "Por favor, informe a placa do veículo para realizar a consulta.",
                         duration: 4000,
                         variant: "destructive"
                       });
@@ -197,8 +197,8 @@ const HeroSection = memo(() => {
                       }
                     } else if (!mercosulRegex.test(finalPlate)) {
                       toast({
-                        title: "🚫 Formato Inválido",
-                        description: "A placa deve estar no padrão Mercosul (Ex: ABC-1C34) ou Antigo (Ex: ABC-1234).",
+                        title: "Formato incorreto",
+                        description: "A placa informada não é válida. Utilize o padrão Mercosul (ABC-1C34) ou Antigo (ABC-1234).",
                         duration: 4000,
                         variant: "destructive"
                       });

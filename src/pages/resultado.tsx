@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info } from "lucide-react";
+import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info, Copy, Printer, Crown } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { consultarPlaca, VehicleData } from "@/services/api";
-import Footer from "@/components/Footer";
+import MinimalFooter from "@/components/MinimalFooter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ResultadoConsulta() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { toast } = useToast();
     const placa = searchParams.get("placa") || "";
 
     const [loading, setLoading] = useState(true);
@@ -119,9 +121,86 @@ export default function ResultadoConsulta() {
                     </div>
                 </div>
 
+                {/* Botões de Ação */}
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                    <Button
+                        variant="outline"
+                        className="gap-2 text-primary border-primary/20 hover:bg-primary/5 hover:text-primary"
+                        onClick={() => {
+                            const fipeText = veiculo.fipe?.dados?.map(f =>
+                                `- ${f.texto_modelo} (${f.combustivel}): ${f.texto_valor} (Ref: ${f.mes_referencia})`
+                            ).join('\n') || 'Não disponível';
+
+                            const text = `
+RELATÓRIO DE CONSULTA VEICULAR
+--------------------------------
+PRINCIPAIS
+Placa: ${veiculo.placa || placa}
+Marca/Modelo: ${veiculo.MARCA}/${veiculo.MODELO}
+Ano Fabricação: ${veiculo.extra.ano_fabricacao || veiculo.ano}
+Ano Modelo: ${veiculo.extra.ano_modelo || veiculo.anoModelo}
+Cor: ${veiculo.cor}
+Combustível: ${veiculo.extra.combustivel}
+
+IDENTIFICAÇÃO
+Renavam: BLOQUEADO (Assine para liberar)
+Chassi: BLOQUEADO (Assine para liberar)
+Motor: BLOQUEADO (Assine para liberar)
+Procedência: ${veiculo.extra.procedencia || veiculo.origem || "NACIONAL"}
+Câmbio: BLOQUEADO (Assine para liberar)
+Carroceria: BLOQUEADO (Assine para liberar)
+Categoria: ${veiculo.extra.especie || "PARTICULAR"}
+
+PROPRIETÁRIO
+Nome: BLOQUEADO (Assine para liberar)
+Documento: BLOQUEADO (Assine para liberar)
+Tipo Doc: BLOQUEADO (Assine para liberar)
+Tipo Doc. Faturado: ${veiculo.extra?.tipo_doc_faturado || '-'}
+UF Faturado: ${veiculo.extra?.uf_faturado || '-'}
+
+OUTROS
+Roubo/Furto: BLOQUEADO (Assine para liberar)
+Município: ${veiculo.municipio || '-'}
+UF: ${veiculo.uf || '-'}
+Segmento: ${veiculo.segmento || '-'}
+Sub Segmento: ${veiculo.sub_segmento || '-'}
+
+TABELA FIPE
+${fipeText}
+--------------------------------
+Gerado por Confere Veicular
+                            `.trim();
+
+                            navigator.clipboard.writeText(text);
+                            toast({
+                                title: "Copiado!",
+                                description: "Todas as informações foram copiadas para a área de transferência.",
+                            });
+                        }}
+                    >
+                        <Copy className="w-4 h-4" />
+                        Copiar
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="gap-2 text-primary border-primary/20 hover:bg-primary/5 hover:text-primary"
+                        onClick={() => window.print()}
+                    >
+                        <Printer className="w-4 h-4" />
+                        Imprimir
+                    </Button>
+                    <Button
+                        className="gap-2 bg-[#00Cca7] hover:bg-[#00Cca7]/90 text-white font-bold border border-[#00Cca7]"
+                        onClick={() => navigate(`/checkout?placa=${placa}`)}
+                    >
+                        <Crown className="w-4 h-4" />
+                        Liberar informações
+                    </Button>
+                </div>
+
                 {/* Grid Informações */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <InfoCard title="Principais" icon={Car} iconColor="text-green-600" iconBg="bg-green-50">
+                    <InfoCard title="Principais" icon={Car} iconColor="text-[#00Cca7]" iconBg="bg-[#00Cca7]/10">
                         <InfoRow label="Placa" value={veiculo.placa || placa} />
                         <InfoRow label="Marca/Modelo" value={`${veiculo.MARCA}/${veiculo.MODELO}`} />
                         <InfoRow label="Marca" value={veiculo.MARCA} />
@@ -132,7 +211,7 @@ export default function ResultadoConsulta() {
                         <InfoRow label="Combustível" value={veiculo.extra.combustivel} />
                     </InfoCard>
 
-                    <InfoCard title="Identificação" icon={FileText} iconColor="text-blue-600" iconBg="bg-blue-50">
+                    <InfoCard title="Identificação" icon={FileText} iconColor="text-[#19406C]" iconBg="bg-[#19406C]/10">
                         <InfoRow label="Renavam" isLocked />
                         <InfoRow label="Chassi" isLocked />
                         <InfoRow label="Motor" isLocked />
@@ -145,7 +224,7 @@ export default function ResultadoConsulta() {
 
                 {/* Grid Informações Adicionais */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <InfoCard title="Proprietário" icon={User} iconColor="text-primary" iconBg="bg-blue-50">
+                    <InfoCard title="Proprietário" icon={User} iconColor="text-[#19406C]" iconBg="bg-[#19406C]/10">
                         <InfoRow label="Nome do Proprietário" isLocked />
                         <InfoRow label="Doc. Proprietário (Parcial)" isLocked />
                         <InfoRow label="Tipo Doc. Proprietário" isLocked />
@@ -153,7 +232,7 @@ export default function ResultadoConsulta() {
                         <InfoRow label="Estado (UF) Faturado" value={veiculo.extra?.uf_faturado || '-'} />
                     </InfoCard>
 
-                    <InfoCard title="Outros" icon={Info} iconColor="text-green-600" iconBg="bg-green-50">
+                    <InfoCard title="Outros" icon={Info} iconColor="text-[#00Cca7]" iconBg="bg-[#00Cca7]/10">
                         <InfoRow label="Situação Roubo/Furto" isLocked />
                         <InfoRow label="Município" value={veiculo.municipio || '-'} />
                         <InfoRow label="Estado (UF)" value={veiculo.uf || '-'} />
@@ -167,8 +246,8 @@ export default function ResultadoConsulta() {
                     veiculo.fipe && veiculo.fipe.dados && veiculo.fipe.dados.length > 0 && (
                         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 mb-8">
                             <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-                                <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center">
-                                    <DollarSign className="w-6 h-6 text-green-600" />
+                                <div className="w-12 h-12 rounded-full bg-[#00Cca7]/10 flex items-center justify-center">
+                                    <DollarSign className="w-6 h-6 text-[#00Cca7]" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-800">Tabela FIPE</h2>
@@ -188,7 +267,7 @@ export default function ResultadoConsulta() {
                                             </div>
                                             <div className="flex justify-between items-center mt-2">
                                                 <span className="text-gray-600">Valor estimado:</span>
-                                                <span className="font-bold text-green-600 text-lg">{fipeData.texto_valor}</span>
+                                                <span className="font-bold text-[#00Cca7] text-lg">{fipeData.texto_valor}</span>
                                             </div>
                                         </AccordionContent>
                                     </AccordionItem>
@@ -240,7 +319,7 @@ export default function ResultadoConsulta() {
 
                                 <Button
                                     className="bg-accent hover:bg-accent/90 text-primary font-bold text-lg h-12 px-8 rounded-xl w-full md:w-auto shadow-xl hover:shadow-accent/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
-                                    onClick={() => console.log("Checkout")}
+                                    onClick={() => navigate(`/checkout?placa=${placa}`)}
                                 >
                                     <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />Liberar por R$ 12,99
                                 </Button>
@@ -268,7 +347,7 @@ export default function ResultadoConsulta() {
                 </div>
             </div>
 
-            <Footer />
+            <MinimalFooter />
         </div>
     );
 }

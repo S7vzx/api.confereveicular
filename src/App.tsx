@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import SobreNos from "./pages/SobreNos";
 import ResultadoConsulta from "./pages/resultado";
 import NotFound from "./pages/NotFound";
+import Checkout from "./pages/Checkout";
 import swManager from '@/utils/swRegistration';
 import performanceMonitor from '@/utils/performanceMonitor';
 import { preloadCriticalImages } from '@/utils/performance';
@@ -41,6 +42,7 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/sobre-nos" element={<SobreNos />} />
             <Route path="/resultado" element={<ResultadoConsulta />} />
+            <Route path="/checkout" element={<Checkout />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
