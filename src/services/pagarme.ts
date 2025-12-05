@@ -48,6 +48,48 @@ const pagarme = {
         }
         return response.json();
     },
+    getOrder: async (orderId: string) => {
+        const response = await fetch(`/api/get-order?id=${orderId}`);
+        if (!response.ok) {
+            throw new Error('Erro ao verificar status do pedido');
+        }
+        return response.json();
+    },
+    getOrders: async () => {
+        const response = await fetch('/api/list-orders');
+        if (!response.ok) {
+            throw new Error('Erro ao buscar pedidos');
+        }
+        return response.json();
+    },
+    // Coupons
+    getCoupons: async () => {
+        const response = await fetch('/api/coupons');
+        return response.json();
+    },
+    createCoupon: async (code: string, discount: number) => {
+        const response = await fetch('/api/coupons', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, discount })
+        });
+        if (!response.ok) throw new Error('Failed to create coupon');
+        return response.json();
+    },
+    deleteCoupon: async (code: string) => {
+        const response = await fetch(`/api/coupons/${code}`, {
+            method: 'DELETE'
+        });
+        return response.json();
+    },
+    validateCoupon: async (code: string) => {
+        const response = await fetch('/api/validate-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        return response.json();
+    }
 };
 
 export const getPublicKey = () => import.meta.env.VITE_PAGARME_PUBLIC_KEY;

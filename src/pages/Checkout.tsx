@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import MinimalFooter from "@/components/MinimalFooter";
 import pagarme from "@/services/pagarme";
+import { QRCodeSVG } from 'qrcode.react';
 
 const Checkout = () => {
     const [searchParams] = useSearchParams();
@@ -21,6 +22,8 @@ const Checkout = () => {
     const [discount, setDiscount] = useState(0);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [orderId, setOrderId] = useState<string | null>(null);
+    const [status, setStatus] = useState<string>("pending");
     const [pixData, setPixData] = useState<any>(null);
 
     // Upsells state
@@ -45,23 +48,61 @@ const Checkout = () => {
         return gross * (1 - discount);
     };
 
-    const handleApplyCoupon = () => {
-        if (coupon.trim().toUpperCase() === "PRIMEIRA20") {
-            setDiscount(0.20);
+    const handleApplyCoupon = async () => {
+        try {
+            const response = await pagarme.validateCoupon(coupon);
+            if (response.valid) {
+                setDiscount(response.discount);
+                toast({
+                    title: "Sucesso!",
+                    description: `Cupom de ${(response.discount * 100).toFixed(0)}% aplicado com sucesso.`,
+                    className: "bg-green-600 text-white border-none"
+                });
+            } else {
+                setDiscount(0);
+                toast({
+                    title: "Cupom inválido",
+                    description: "O código informado não é válido ou expirou.",
+                    variant: "destructive"
+                });
+            }
+        } catch (error) {
+            console.error(error);
             toast({
-                title: "Sucesso!",
-                description: "Cupom de 20% aplicado com sucesso.",
-                className: "bg-green-600 text-white border-none"
-            });
-        } else {
-            setDiscount(0);
-            toast({
-                title: "Cupom inválido",
-                description: "O código informado não é válido.",
+                title: "Erro",
+                description: "Erro ao validar cupom.",
                 variant: "destructive"
             });
         }
     };
+
+    // Polling for payment status
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout;
+
+        if (orderId && status === 'pending') {
+            intervalId = setInterval(async () => {
+                try {
+                    const order = await pagarme.getOrder(orderId);
+                    if (order.status === 'paid') {
+                        setStatus('paid');
+                        toast({
+                            title: "Pagamento Confirmado!",
+                            description: "Seu relatório já está disponível.",
+                            className: "bg-green-600 text-white border-none"
+                        });
+                        clearInterval(intervalId);
+                    }
+                } catch (error) {
+                    console.error("Erro ao verificar status:", error);
+                }
+            }, 3000); // Check every 3 seconds
+        }
+
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [orderId, status, toast]);
 
     const handlePayment = async () => {
         if (!email || !email.includes("@")) {
@@ -106,6 +147,10 @@ const Checkout = () => {
 
             const data = await pagarme.createPixTransaction(amount, description, customer);
 
+            if (data.id) {
+                setOrderId(data.id);
+            }
+
             const charge = data.charges[0];
             const transaction = charge.last_transaction;
 
@@ -143,6 +188,46 @@ const Checkout = () => {
         }
     };
 
+    if (status === 'paid') {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <header className="bg-white border-b border-gray-200 py-4 sticky top-0 z-50">
+                    <div className="container mx-auto px-4 flex justify-center">
+                        <img
+                            src="/uploads/logo nova.png"
+                            alt="Confere Veicular"
+                            className="h-8 md:h-10 w-auto"
+                        />
+                    </div>
+                </header>
+                <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex justify-center items-center">
+                    <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center animate-in fade-in zoom-in duration-500">
+                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Check className="w-10 h-10 text-green-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-[#19406C] mb-2">Pagamento Confirmado!</h2>
+                        <p className="text-gray-600 mb-8">Recebemos seu pagamento. Seu relatório completo já está sendo processado.</p>
+
+                        <div className="space-y-4">
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-green-800 text-sm">
+                                Enviamos uma cópia para: <strong>{email}</strong>
+                            </div>
+
+                            <Button
+                                className="w-full h-12 bg-[#00Cca7] hover:bg-[#00Cca7]/90 font-bold gap-2"
+                                onClick={() => window.location.reload()} // Placeholder for download action
+                            >
+                                <ArrowRight className="w-5 h-5" />
+                                Visualizar Relatório
+                            </Button>
+                        </div>
+                    </div>
+                </main>
+                <MinimalFooter />
+            </div>
+        );
+    }
+
     if (pixData) {
         return (
             <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -157,19 +242,37 @@ const Checkout = () => {
                 </header>
                 <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex justify-center items-center">
                     <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center">
+                        {/* Loading Spinner for Polling Feedback (Optional but good UX) */}
+                        <div className="absolute top-4 right-4">
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                Aguardando pagamento...
+                            </div>
+                        </div>
+
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <QrCode className="w-8 h-8 text-green-600" />
                         </div>
                         <h2 className="text-2xl font-bold text-[#19406C] mb-2">Pagamento Pix</h2>
                         <p className="text-gray-600 mb-8">Escaneie o QR Code abaixo ou copie o código para pagar.</p>
 
-                        <div className="mb-8 p-4 border-2 border-dashed border-gray-200 rounded-xl">
-                            {pixData.qr_code_url ? (
-                                <img src={pixData.qr_code_url} alt="QR Code Pix" className="w-full h-auto" />
+                        <div className="mb-8 p-4 border-2 border-dashed border-gray-200 rounded-xl flex justify-center bg-white">
+                            {pixData.qr_code ? (
+                                <QRCodeSVG
+                                    value={pixData.qr_code}
+                                    size={256}
+                                    level={"M"}
+                                    imageSettings={{
+                                        src: "/favicon.ico",
+                                        x: undefined,
+                                        y: undefined,
+                                        height: 34,
+                                        width: 34,
+                                        excavate: true,
+                                    }}
+                                />
                             ) : (
-                                <div className="break-all text-xs text-gray-400 p-4 bg-gray-50 rounded">
-                                    {pixData.qr_code}
-                                </div>
+                                <div className="text-gray-400">Gerando QR Code...</div>
                             )}
                         </div>
 
