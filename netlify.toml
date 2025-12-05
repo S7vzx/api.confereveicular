@@ -7,6 +7,21 @@
   node_bundler = "esbuild"
 
 [[redirects]]
+  from = "/api/validate-coupon"
+  to = "/.netlify/functions/coupons"
+  status = 200
+
+[[redirects]]
+  from = "/api/coupons/*"
+  to = "/.netlify/functions/coupons"
+  status = 200
+
+[[redirects]]
+  from = "/api/coupons"
+  to = "/.netlify/functions/coupons"
+  status = 200
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
