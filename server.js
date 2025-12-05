@@ -6,8 +6,20 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+console.log('🚀 Server starting - executing server.js');
 app.use(cors());
 app.use(express.json());
+
+// Log incoming requests for debugging
+app.use((req, res, next) => {
+    console.log('Incoming request:', req.method, req.path);
+    next();
+});
+
+// Simple root route for sanity check
+app.get('/', (req, res) => res.send('Root OK'));
+// Health check route
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 const baseURL = 'https://api.pagar.me/core/v5';
 const headers = {
@@ -16,53 +28,27 @@ const headers = {
     Authorization: 'Basic ' + Buffer.from(process.env.VITE_PAGARME_SECRET_KEY + ':').toString('base64'),
 };
 
+// Create Pix endpoint
 app.post('/api/create-pix', async (req, res) => {
     try {
         const { amount, description, customer } = req.body;
         const payload = {
             account_id: process.env.VITE_PAGARME_ACCOUNT_ID,
-            items: [
-                {
-                    amount,
-                    description,
-                    quantity: 1,
-                    code: 'consultation',
-                },
-            ],
+            items: [{ amount, description, quantity: 1, code: 'consultation' }],
             customer: {
                 name: customer.name || 'Cliente Confere',
                 email: customer.email,
                 type: 'individual',
-                document: customer.document?.replace(/\D/g, '') || '00000000000',
-                phones: {
-                    mobile_phone: {
-                        country_code: '55',
-                        area_code: '11',
-                        number: '999999999',
-                    },
-                },
+                document: customer.document?.replace(/\\D/g, '') || '00000000000',
+                phones: { mobile_phone: { country_code: '55', area_code: '11', number: '999999999' } },
             },
-            payments: [
-                {
-                    payment_method: 'pix',
-                    pix: {
-                        expires_in: 3600,
-                    },
-                },
-            ],
+            payments: [{ payment_method: 'pix', pix: { expires_in: 3600 } }],
         };
-
-        const response = await fetch(`${baseURL}/orders`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(payload),
-        });
-
+        const response = await fetch(`${baseURL}/orders`, { method: 'POST', headers, body: JSON.stringify(payload) });
         if (!response.ok) {
             const err = await response.json();
             return res.status(response.status).json({ message: err.message || 'Erro ao criar Pix' });
         }
-
         const data = await response.json();
         res.json(data);
     } catch (err) {
@@ -71,23 +57,16 @@ app.post('/api/create-pix', async (req, res) => {
     }
 });
 
+// Get order by ID
 app.get('/api/get-order', async (req, res) => {
     const { id } = req.query;
-
-    if (!id) {
-        return res.status(400).json({ message: 'Missing order ID' });
-    }
-
+    if (!id) return res.status(400).json({ message: 'Missing order ID' });
     try {
-        const response = await fetch(`${baseURL}/orders/${id}`, {
-            headers
-        });
-
+        const response = await fetch(`${baseURL}/orders/${id}`, { headers });
         if (!response.ok) {
             const err = await response.json();
             return res.status(response.status).json({ message: err.message || 'Erro ao buscar pedido' });
         }
-
         const data = await response.json();
         res.json(data);
     } catch (err) {
@@ -96,18 +75,14 @@ app.get('/api/get-order', async (req, res) => {
     }
 });
 
+// List orders
 app.get('/api/list-orders', async (req, res) => {
     try {
-        // Fetch last 50 orders
-        const response = await fetch(`${baseURL}/orders?page=1&size=50&sort=created_at&order=desc`, {
-            headers
-        });
-
+        const response = await fetch(`${baseURL}/orders?page=1&size=50&sort=created_at&order=desc`, { headers });
         if (!response.ok) {
             const err = await response.json();
             return res.status(response.status).json({ message: err.message || 'Erro ao buscar pedidos' });
         }
-
         const data = await response.json();
         res.json(data);
     } catch (err) {
@@ -115,6 +90,7 @@ app.get('/api/list-orders', async (req, res) => {
         res.status(500).json({ message: err.message || 'Erro interno' });
     }
 });
+
 // In-memory coupon storage
 const coupons = [];
 
@@ -126,12 +102,8 @@ app.get('/api/coupons', (req, res) => {
 // Create a new coupon
 app.post('/api/coupons', (req, res) => {
     const { code, discount } = req.body;
-    if (!code || discount == null) {
-        return res.status(400).json({ message: 'Code and discount are required' });
-    }
-    if (coupons.find(c => c.code === code)) {
-        return res.status(409).json({ message: 'Coupon already exists' });
-    }
+    if (!code || discount == null) return res.status(400).json({ message: 'Code and discount are required' });
+    if (coupons.find(c => c.code === code)) return res.status(409).json({ message: 'Coupon already exists' });
     coupons.push({ code, discount: Number(discount) });
     res.status(201).json({ code, discount });
 });
@@ -140,9 +112,7 @@ app.post('/api/coupons', (req, res) => {
 app.delete('/api/coupons/:code', (req, res) => {
     const { code } = req.params;
     const index = coupons.findIndex(c => c.code === code);
-    if (index === -1) {
-        return res.status(404).json({ message: 'Coupon not found' });
-    }
+    if (index === -1) return res.status(404).json({ message: 'Coupon not found' });
     coupons.splice(index, 1);
     res.json({ message: 'Coupon deleted' });
 });
@@ -151,9 +121,7 @@ app.delete('/api/coupons/:code', (req, res) => {
 app.post('/api/validate-coupon', (req, res) => {
     const { code } = req.body;
     const coupon = coupons.find(c => c.code === code);
-    if (!coupon) {
-        return res.json({ valid: false });
-    }
+    if (!coupon) return res.json({ valid: false });
     res.json({ valid: true, discount: coupon.discount });
 });
 
