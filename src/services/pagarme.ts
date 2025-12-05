@@ -29,8 +29,8 @@ const pagarme = {
         return response.json();
     },
     createPixTransaction: async (amount: number, description: string, customer: any) => {
-        // Call local backend proxy to avoid CORS and hide Secret Key
-        const response = await fetch('http://localhost:4000/api/create-pix', {
+        // Call backend (local proxy or serverless function)
+        const response = await fetch('/api/create-pix', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
