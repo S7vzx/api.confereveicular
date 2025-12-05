@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { consultarPlaca, VehicleData } from "@/services/api";
 import MinimalFooter from "@/components/MinimalFooter";
 import { useToast } from "@/hooks/use-toast";
+import { CouponPopup } from "@/components/CouponPopup";
 
 export default function ResultadoConsulta() {
     const [searchParams] = useSearchParams();
@@ -87,18 +88,25 @@ export default function ResultadoConsulta() {
                 </Button>
 
                 {/* Header Card */}
-                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 mb-8 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16">
-                    <div className="space-y-3 text-center md:text-left flex-1">
-                        <h1 className="text-4xl md:text-5xl font-bold text-primary leading-tight">
+                <div className="bg-white rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-slate-100 p-8 md:p-12 mb-10 flex flex-col md:flex-row items-center justify-between gap-10 md:gap-16 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50/50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+
+                    <div className="space-y-4 text-center md:text-left flex-1 relative z-10">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight tracking-tight">
                             Resultado da sua <br />consulta!
                         </h1>
-                        <p className="text-primary font-medium text-sm md:text-base uppercase tracking-wide">
-                            VOCÊ CONSULTOU UM: <span className="font-bold">{veiculo.MARCA}/{veiculo.MODELO.split(' ')[0]}</span>
-                        </p>
+                        <div className="inline-flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                            <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">
+                                VEÍCULO CONSULTADO:
+                            </span>
+                            <span className="text-slate-800 font-bold text-sm">
+                                {veiculo.MARCA}/{veiculo.MODELO.split(' ')[0]}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Placa Mercosul */}
-                    <div className="relative w-72 h-24 bg-white border-4 border-black rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300">
+                    <div className="relative w-72 h-24 bg-white border-4 border-black rounded-lg shadow-xl shadow-black/10 overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300 z-10">
                         <div className="bg-[#003399] h-7 w-full flex items-center justify-between px-2 relative border-b border-white/20">
                             <span className="text-[6px] text-white font-bold tracking-wider absolute top-1 left-1">MERCOSUL</span>
                             <div className="w-full text-center text-white font-bold text-xs tracking-widest">BRASIL</div>
@@ -110,9 +118,8 @@ export default function ResultadoConsulta() {
                             <span className="text-5xl font-black tracking-widest text-black whitespace-nowrap" style={{ fontFamily: 'MercosulPlate, sans-serif' }}>
                                 {(() => {
                                     const clean = placa.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-                                    if (clean.length !== 7) return placa; // Retorna como está se já tiver formatação ou tamanho diferente
+                                    if (clean.length !== 7) return placa;
 
-                                    // Formata sempre com hífen após o 3º caractere (ABC-1D34 ou ABC-1234)
                                     return `${clean.slice(0, 3)}-${clean.slice(3)}`;
                                 })()}
                             </span>
@@ -122,10 +129,10 @@ export default function ResultadoConsulta() {
                 </div>
 
                 {/* Botões de Ação */}
-                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                <div className="flex flex-wrap justify-center gap-4 mb-10">
                     <Button
                         variant="outline"
-                        className="gap-2 text-primary border-primary/20 hover:bg-primary/5 hover:text-primary"
+                        className="h-12 px-6 rounded-xl gap-2 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all"
                         onClick={() => {
                             const fipeText = veiculo.fipe?.dados?.map(f =>
                                 `- ${f.texto_modelo} (${f.combustivel}): ${f.texto_valor} (Ref: ${f.mes_referencia})`
@@ -179,28 +186,28 @@ Gerado por Confere Veicular
                         }}
                     >
                         <Copy className="w-4 h-4" />
-                        Copiar
+                        Copiar Relatório
                     </Button>
                     <Button
                         variant="outline"
-                        className="gap-2 text-primary border-primary/20 hover:bg-primary/5 hover:text-primary"
+                        className="h-12 px-6 rounded-xl gap-2 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all"
                         onClick={() => window.print()}
                     >
                         <Printer className="w-4 h-4" />
                         Imprimir
                     </Button>
                     <Button
-                        className="gap-2 bg-[#00Cca7] hover:bg-[#00Cca7]/90 text-white font-bold border border-[#00Cca7]"
+                        className="h-12 px-8 rounded-xl gap-2 bg-gradient-to-r from-[#00Cca7] to-[#00b896] hover:from-[#00b896] hover:to-[#00a385] text-white font-bold border-0 shadow-lg shadow-[#00Cca7]/25 hover:shadow-xl hover:shadow-[#00Cca7]/35 hover:-translate-y-0.5 transition-all text-base"
                         onClick={() => navigate(`/checkout?placa=${placa}`)}
                     >
-                        <Crown className="w-4 h-4" />
-                        Liberar informações
+                        <Crown className="w-5 h-5" />
+                        Liberar Informações Completas
                     </Button>
                 </div>
 
                 {/* Grid Informações */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <InfoCard title="Principais" icon={Car} iconColor="text-[#00Cca7]" iconBg="bg-[#00Cca7]/10">
+                    <InfoCard title="Principais" icon={Car} iconColor="text-blue-600" iconBg="bg-blue-50">
                         <InfoRow label="Placa" value={veiculo.placa || placa} />
                         <InfoRow label="Marca/Modelo" value={`${veiculo.MARCA}/${veiculo.MODELO}`} />
                         <InfoRow label="Marca" value={veiculo.MARCA} />
@@ -211,29 +218,29 @@ Gerado por Confere Veicular
                         <InfoRow label="Combustível" value={veiculo.extra.combustivel} />
                     </InfoCard>
 
-                    <InfoCard title="Identificação" icon={FileText} iconColor="text-[#19406C]" iconBg="bg-[#19406C]/10">
-                        <InfoRow label="Renavam" isLocked />
-                        <InfoRow label="Chassi" isLocked />
-                        <InfoRow label="Motor" isLocked />
+                    <InfoCard title="Identificação" icon={FileText} iconColor="text-indigo-600" iconBg="bg-indigo-50">
+                        <LockedRow label="Renavam" />
+                        <LockedRow label="Chassi" />
+                        <LockedRow label="Motor" />
                         <InfoRow label="Procedência" value={veiculo.extra.procedencia || veiculo.origem || "NACIONAL"} />
-                        <InfoRow label="Câmbio" isLocked />
-                        <InfoRow label="Carroceria" isLocked />
+                        <LockedRow label="Câmbio" />
+                        <LockedRow label="Carroceria" />
                         <InfoRow label="Categoria" value={veiculo.extra.especie || "PARTICULAR"} />
                     </InfoCard>
                 </div>
 
                 {/* Grid Informações Adicionais */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <InfoCard title="Proprietário" icon={User} iconColor="text-[#19406C]" iconBg="bg-[#19406C]/10">
-                        <InfoRow label="Nome do Proprietário" isLocked />
-                        <InfoRow label="Doc. Proprietário (Parcial)" isLocked />
-                        <InfoRow label="Tipo Doc. Proprietário" isLocked />
+                    <InfoCard title="Proprietário" icon={User} iconColor="text-purple-600" iconBg="bg-purple-50">
+                        <LockedRow label="Nome do Proprietário" />
+                        <LockedRow label="Doc. Proprietário (Parcial)" />
+                        <LockedRow label="Tipo Doc. Proprietário" />
                         <InfoRow label="Tipo Doc. Faturado" value={veiculo.extra?.tipo_doc_faturado || '-'} />
                         <InfoRow label="Estado (UF) Faturado" value={veiculo.extra?.uf_faturado || '-'} />
                     </InfoCard>
 
-                    <InfoCard title="Outros" icon={Info} iconColor="text-[#00Cca7]" iconBg="bg-[#00Cca7]/10">
-                        <InfoRow label="Situação Roubo/Furto" isLocked />
+                    <InfoCard title="Outros" icon={Info} iconColor="text-teal-600" iconBg="bg-teal-50">
+                        <LockedRow label="Situação Roubo/Furto" />
                         <InfoRow label="Município" value={veiculo.municipio || '-'} />
                         <InfoRow label="Estado (UF)" value={veiculo.uf || '-'} />
                         <InfoRow label="Segmento" value={veiculo.segmento || '-'} />
@@ -306,7 +313,7 @@ Gerado por Confere Veicular
                                             <p className="text-blue-200 text-xs line-through mb-1">De R$ 27,99</p>
                                             <div className="flex items-baseline gap-1">
                                                 <span className="text-accent text-xl font-bold">R$</span>
-                                                <span className="text-accent text-5xl font-black tracking-tighter">12,99</span>
+                                                <span className="text-accent text-5xl font-black tracking-tighter">24,90</span>
                                             </div>
                                         </div>
                                         <div className="bg-accent/20 text-accent px-3 py-1.5 rounded-lg border border-accent/30">
@@ -321,7 +328,7 @@ Gerado por Confere Veicular
                                     className="bg-accent hover:bg-accent/90 text-primary font-bold text-lg h-12 px-8 rounded-xl w-full md:w-auto shadow-xl hover:shadow-accent/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
                                     onClick={() => navigate(`/checkout?placa=${placa}`)}
                                 >
-                                    <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />Liberar por R$ 12,99
+                                    <Lock className="w-5 h-5 group-hover:scale-110 transition-transform" />Liberar por R$ 24,90
                                 </Button>
 
                                 <div className="flex items-center gap-3 text-xs text-blue-200/80">
@@ -348,34 +355,41 @@ Gerado por Confere Veicular
             </div>
 
             <MinimalFooter />
+            <CouponPopup />
         </div>
     );
 }
 
 const InfoCard = ({ title, icon: Icon, iconColor, iconBg, children }: any) => (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8 hover:shadow-lg transition-shadow duration-300">
-        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-            <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
+    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-50">
+            <div className={`w-12 h-12 rounded-2xl ${iconBg} flex items-center justify-center shadow-sm`}>
                 <Icon className={`w-6 h-6 ${iconColor}`} />
             </div>
             <div>
                 <h2 className="text-xl font-bold text-gray-800">{title}</h2>
-                <p className="text-sm text-gray-500">Dados do veículo</p>
+                <p className="text-sm text-gray-400">Dados verificados</p>
             </div>
         </div>
-        <div className="space-y-3">{children}</div>
+        <div className="space-y-1">{children}</div>
     </div>
 );
 
-const InfoRow = ({ label, value, isLocked = false }: { label: string, value?: string, isLocked?: boolean }) => (
-    <div className="flex items-center justify-between py-3 px-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg transition-colors duration-200">
-        <span className="font-semibold text-gray-700 text-sm md:text-base">{label}</span>
-        {isLocked ? (
-            <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200 gap-1.5 py-1 px-3 border border-gray-200">
-                <Lock className="w-3 h-3" /> <span className="text-xs font-bold">BLOQUEADO</span>
-            </Badge>
-        ) : (
-            <span className="text-gray-600 font-medium text-right text-sm md:text-base">{value || '-'}</span>
-        )}
+const InfoRow = ({ label, value }: { label: string, value?: string }) => (
+    <div className="flex items-center justify-between py-3 px-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg transition-colors">
+        <span className="font-medium text-gray-600 text-sm">{label}</span>
+        <span className="text-gray-900 font-bold text-right text-sm md:text-base">{value || '-'}</span>
+    </div>
+);
+
+const LockedRow = ({ label }: { label: string }) => (
+    <div className="flex items-center justify-between py-3 px-2 border-b border-gray-50 last:border-0 hover:bg-red-50/30 rounded-lg transition-colors group cursor-pointer">
+        <span className="font-medium text-gray-500 text-sm group-hover:text-red-400 transition-colors">{label}</span>
+        <div className="relative flex items-center bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200 group-hover:border-red-200 group-hover:bg-red-50 transition-all overflow-hidden">
+            <span className="text-gray-400 font-bold text-sm blur-[4px] select-none group-hover:text-red-300 transition-colors">DADO SIGILOSO</span>
+            <div className="absolute inset-0 flex items-center justify-center">
+                <Lock className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-500 transition-colors" />
+            </div>
+        </div>
     </div>
 );

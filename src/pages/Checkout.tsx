@@ -16,6 +16,7 @@ const Checkout = () => {
 
     const [email, setEmail] = useState("");
     const [coupon, setCoupon] = useState("");
+    const [discount, setDiscount] = useState(0);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -25,15 +26,38 @@ const Checkout = () => {
         leilao: false
     });
 
-    const basePrice = 19.90;
+    const basePrice = 24.90;
     const debitosPrice = 7.99;
     const leilaoPrice = 24.99;
 
-    const calculateTotal = () => {
+    const getGrossTotal = () => {
         let total = basePrice;
         if (upsells.debitos) total += debitosPrice;
         if (upsells.leilao) total += leilaoPrice;
         return total;
+    };
+
+    const calculateTotal = () => {
+        const gross = getGrossTotal();
+        return gross * (1 - discount);
+    };
+
+    const handleApplyCoupon = () => {
+        if (coupon.trim().toUpperCase() === "PRIMEIRA20") {
+            setDiscount(0.20);
+            toast({
+                title: "Sucesso!",
+                description: "Cupom de 20% aplicado com sucesso.",
+                className: "bg-green-600 text-white border-none"
+            });
+        } else {
+            setDiscount(0);
+            toast({
+                title: "Cupom inválido",
+                description: "O código informado não é válido.",
+                variant: "destructive"
+            });
+        }
     };
 
     const handlePayment = () => {
@@ -196,10 +220,12 @@ const Checkout = () => {
                                     </div>
                                 )}
 
-                                <div className="flex justify-between items-center py-2 text-[#00Cca7]">
-                                    <span className="text-sm font-medium">Desconto Promocional</span>
-                                    <span className="font-bold">-R$ 0,00</span>
-                                </div>
+                                {discount > 0 && (
+                                    <div className="flex justify-between items-center py-2 text-[#00Cca7] bg-[#00Cca7]/5 px-2 rounded-lg">
+                                        <span className="text-sm font-medium flex items-center gap-1"><Tag className="w-3 h-3" /> Desconto (20%)</span>
+                                        <span className="font-bold">- R$ {(getGrossTotal() * discount).toFixed(2).replace('.', ',')}</span>
+                                    </div>
+                                )}
 
                                 <div className="flex justify-between items-center pt-5 pb-2 border-t border-gray-100">
                                     <span className="text-gray-600">Método</span>
@@ -227,7 +253,11 @@ const Checkout = () => {
                                             className="pl-9 h-10 text-sm border-gray-300 border-dashed"
                                         />
                                     </div>
-                                    <Button variant="outline" className="h-10 px-4 text-[#19406C] border-[#19406C] hover:bg-[#19406C]/5">
+                                    <Button
+                                        variant="outline"
+                                        className="h-10 px-4 text-[#19406C] border-[#19406C] hover:bg-[#19406C]/5"
+                                        onClick={handleApplyCoupon}
+                                    >
                                         Validar
                                     </Button>
                                 </div>

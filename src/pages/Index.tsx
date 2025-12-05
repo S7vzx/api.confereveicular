@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import LazySection from "@/components/LazySection";
+import { CouponPopup } from "@/components/CouponPopup";
 
 // Lazy load components below the fold
 
@@ -61,6 +62,7 @@ const Index = () => {
           <Footer />
         </Suspense>
       </LazySection>
+      <CouponPopup />
     </div>
   );
 };
