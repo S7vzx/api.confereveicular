@@ -115,6 +115,47 @@ app.get('/api/list-orders', async (req, res) => {
         res.status(500).json({ message: err.message || 'Erro interno' });
     }
 });
+// In-memory coupon storage
+const coupons = [];
+
+// Get all coupons
+app.get('/api/coupons', (req, res) => {
+    res.json(coupons);
+});
+
+// Create a new coupon
+app.post('/api/coupons', (req, res) => {
+    const { code, discount } = req.body;
+    if (!code || discount == null) {
+        return res.status(400).json({ message: 'Code and discount are required' });
+    }
+    if (coupons.find(c => c.code === code)) {
+        return res.status(409).json({ message: 'Coupon already exists' });
+    }
+    coupons.push({ code, discount: Number(discount) });
+    res.status(201).json({ code, discount });
+});
+
+// Delete a coupon
+app.delete('/api/coupons/:code', (req, res) => {
+    const { code } = req.params;
+    const index = coupons.findIndex(c => c.code === code);
+    if (index === -1) {
+        return res.status(404).json({ message: 'Coupon not found' });
+    }
+    coupons.splice(index, 1);
+    res.json({ message: 'Coupon deleted' });
+});
+
+// Validate coupon
+app.post('/api/validate-coupon', (req, res) => {
+    const { code } = req.body;
+    const coupon = coupons.find(c => c.code === code);
+    if (!coupon) {
+        return res.json({ valid: false });
+    }
+    res.json({ valid: true, discount: coupon.discount });
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
