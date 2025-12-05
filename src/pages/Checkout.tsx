@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Shield, Lock, Check, CreditCard, Tag, ArrowRight } from "lucide-react";
+import { Shield, Lock, Check, CreditCard, Tag, ArrowRight, Copy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import MinimalFooter from "@/components/MinimalFooter";
+import pagarme from "@/services/pagarme";
 
 const Checkout = () => {
     const [searchParams] = useSearchParams();
@@ -15,10 +16,12 @@ const Checkout = () => {
     const plate = searchParams.get("placa") || "ABC-1234";
 
     const [email, setEmail] = useState("");
+    const [cpf, setCpf] = useState("");
     const [coupon, setCoupon] = useState("");
     const [discount, setDiscount] = useState(0);
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [pixData, setPixData] = useState<any>(null);
 
     // Upsells state
     const [upsells, setUpsells] = useState({
@@ -60,11 +63,20 @@ const Checkout = () => {
         }
     };
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         if (!email || !email.includes("@")) {
             toast({
                 title: "E-mail inválido",
                 description: "Por favor, informe um endereço de e-mail válido para receber o relatório.",
+                variant: "destructive"
+            });
+            return;
+        }
+
+        if (!cpf || cpf.length < 11) {
+            toast({
+                title: "CPF inválido",
+                description: "Por favor, informe um numero de CPF válido.",
                 variant: "destructive"
             });
             return;
@@ -81,16 +93,114 @@ const Checkout = () => {
 
         setIsLoading(true);
 
-        // Simulate processing
-        setTimeout(() => {
-            setIsLoading(false);
-            toast({
-                title: "Redirecionando para pagamento...",
-                description: "Aguarde enquanto geramos seu QR Code Pix.",
+        try {
+            // Basic amount calculation in cents
+            const amount = Math.round(calculateTotal() * 100);
+            const description = `Consulta Veicular Placa ${plate}`;
+
+            const customer = {
+                name: "Cliente Confere", // In a real app we'd ask for the name
+                email: email,
+                document: cpf.replace(/\D/g, '') // Remove non-digits
+            };
+
+            const data = await pagarme.createPixTransaction(amount, description, customer);
+
+            const charge = data.charges[0];
+            const transaction = charge.last_transaction;
+
+            setPixData({
+                qr_code: transaction.qr_code,
+                qr_code_url: transaction.qr_code_url,
+                expires_at: transaction.expires_at
             });
-            // Here you would redirect to the actual payment gateway
-        }, 1500);
+
+            toast({
+                title: "Pedido gerado!",
+                description: "Utilize o QR Code para realizar o pagamento.",
+                className: "bg-green-600 text-white border-none"
+            });
+
+        } catch (error: any) {
+            console.error("Payment error:", error);
+            toast({
+                title: "Erro no pagamento",
+                description: error.message || "Não foi possível gerar o pagamento. Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    const copyToClipboard = () => {
+        if (pixData?.qr_code) {
+            navigator.clipboard.writeText(pixData.qr_code);
+            toast({
+                title: "Copiado!",
+                description: "Código Pix copiado para a área de transferência.",
+            });
+        }
+    };
+
+    if (pixData) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                <header className="bg-white border-b border-gray-200 py-4 sticky top-0 z-50">
+                    <div className="container mx-auto px-4 flex justify-center">
+                        <img
+                            src="/uploads/logo nova.png"
+                            alt="Confere Veicular"
+                            className="h-8 md:h-10 w-auto"
+                        />
+                    </div>
+                </header>
+                <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex justify-center items-center">
+                    <div className="max-w-md w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-8 text-center">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <QrCode className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-[#19406C] mb-2">Pagamento Pix</h2>
+                        <p className="text-gray-600 mb-8">Escaneie o QR Code abaixo ou copie o código para pagar.</p>
+
+                        <div className="mb-8 p-4 border-2 border-dashed border-gray-200 rounded-xl">
+                            {pixData.qr_code_url ? (
+                                <img src={pixData.qr_code_url} alt="QR Code Pix" className="w-full h-auto" />
+                            ) : (
+                                <div className="break-all text-xs text-gray-400 p-4 bg-gray-50 rounded">
+                                    {pixData.qr_code}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-4">
+                            <Button
+                                onClick={copyToClipboard}
+                                className="w-full h-12 bg-[#19406C] hover:bg-[#19406C]/90 font-bold gap-2"
+                            >
+                                <Copy className="w-4 h-4" />
+                                Copiar Código Pix
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => setPixData(null)}
+                                className="w-full h-12 border-gray-300 text-gray-600 hover:bg-gray-50"
+                            >
+                                Voltar
+                            </Button>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-gray-100">
+                            <p className="text-sm text-gray-500">
+                                Após o pagamento, seu relatório será enviado para <span className="font-bold text-[#19406C]">{email}</span>
+                            </p>
+                        </div>
+                    </div>
+                </main>
+                <MinimalFooter />
+            </div>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -132,6 +242,17 @@ const Checkout = () => {
                                     <p className="text-sm text-gray-500">
                                         Neste e-mail que enviaremos seu relatório completo. Por favor, informe um e-mail válido.
                                     </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="cpf" className="text-gray-700 font-medium">Informe o seu CPF</Label>
+                                    <Input
+                                        id="cpf"
+                                        type="text"
+                                        placeholder="000.000.000-00"
+                                        value={cpf}
+                                        onChange={(e) => setCpf(e.target.value)}
+                                        className="h-12 text-lg border-gray-300 focus:border-[#19406C] focus:ring-[#19406C]"
+                                    />
                                 </div>
                             </div>
                         </div>

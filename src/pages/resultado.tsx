@@ -100,7 +100,7 @@ export default function ResultadoConsulta() {
                                 VEÍCULO CONSULTADO:
                             </span>
                             <span className="text-slate-800 font-bold text-sm">
-                                {veiculo.MARCA}/{veiculo.MODELO.split(' ')[0]}
+                                {veiculo.MARCA || 'N/A'}/{veiculo.MODELO ? veiculo.MODELO.split(' ')[0] : 'N/A'}
                             </span>
                         </div>
                     </div>
@@ -143,20 +143,20 @@ RELATÓRIO DE CONSULTA VEICULAR
 --------------------------------
 PRINCIPAIS
 Placa: ${veiculo.placa || placa}
-Marca/Modelo: ${veiculo.MARCA}/${veiculo.MODELO}
-Ano Fabricação: ${veiculo.extra.ano_fabricacao || veiculo.ano}
-Ano Modelo: ${veiculo.extra.ano_modelo || veiculo.anoModelo}
-Cor: ${veiculo.cor}
-Combustível: ${veiculo.extra.combustivel}
+Marca/Modelo: ${veiculo.MARCA || 'N/A'}/${veiculo.MODELO || 'N/A'}
+Ano Fabricação: ${veiculo.extra?.ano_fabricacao || veiculo.ano || 'N/A'}
+Ano Modelo: ${veiculo.extra?.ano_modelo || veiculo.anoModelo || 'N/A'}
+Cor: ${veiculo.cor || 'N/A'}
+Combustível: ${veiculo.extra?.combustivel || 'N/A'}
 
 IDENTIFICAÇÃO
 Renavam: BLOQUEADO (Assine para liberar)
 Chassi: BLOQUEADO (Assine para liberar)
 Motor: BLOQUEADO (Assine para liberar)
-Procedência: ${veiculo.extra.procedencia || veiculo.origem || "NACIONAL"}
+Procedência: ${veiculo.extra?.procedencia || veiculo.origem || "NACIONAL"}
 Câmbio: BLOQUEADO (Assine para liberar)
 Carroceria: BLOQUEADO (Assine para liberar)
-Categoria: ${veiculo.extra.especie || "PARTICULAR"}
+Categoria: ${veiculo.extra?.especie || "PARTICULAR"}
 
 PROPRIETÁRIO
 Nome: BLOQUEADO (Assine para liberar)
@@ -209,23 +209,23 @@ Gerado por Confere Veicular
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <InfoCard title="Principais" icon={Car} iconColor="text-blue-600" iconBg="bg-blue-50">
                         <InfoRow label="Placa" value={veiculo.placa || placa} />
-                        <InfoRow label="Marca/Modelo" value={`${veiculo.MARCA}/${veiculo.MODELO}`} />
-                        <InfoRow label="Marca" value={veiculo.MARCA} />
-                        <InfoRow label="Modelo" value={veiculo.MODELO} />
-                        <InfoRow label="Ano Fabricação" value={veiculo.extra.ano_fabricacao || veiculo.ano} />
-                        <InfoRow label="Ano Modelo" value={veiculo.extra.ano_modelo || veiculo.anoModelo} />
-                        <InfoRow label="Cor" value={veiculo.cor} />
-                        <InfoRow label="Combustível" value={veiculo.extra.combustivel} />
+                        <InfoRow label="Marca/Modelo" value={`${veiculo.MARCA || 'N/A'}/${veiculo.MODELO || 'N/A'}`} />
+                        <InfoRow label="Marca" value={veiculo.MARCA || 'N/A'} />
+                        <InfoRow label="Modelo" value={veiculo.MODELO || 'N/A'} />
+                        <InfoRow label="Ano Fabricação" value={veiculo.extra?.ano_fabricacao || veiculo.ano || 'N/A'} />
+                        <InfoRow label="Ano Modelo" value={veiculo.extra?.ano_modelo || veiculo.anoModelo || 'N/A'} />
+                        <InfoRow label="Cor" value={veiculo.cor || 'N/A'} />
+                        <InfoRow label="Combustível" value={veiculo.extra?.combustivel || 'N/A'} />
                     </InfoCard>
 
                     <InfoCard title="Identificação" icon={FileText} iconColor="text-indigo-600" iconBg="bg-indigo-50">
                         <LockedRow label="Renavam" />
                         <LockedRow label="Chassi" />
                         <LockedRow label="Motor" />
-                        <InfoRow label="Procedência" value={veiculo.extra.procedencia || veiculo.origem || "NACIONAL"} />
+                        <InfoRow label="Procedência" value={veiculo.extra?.procedencia || veiculo.origem || "NACIONAL"} />
                         <LockedRow label="Câmbio" />
                         <LockedRow label="Carroceria" />
-                        <InfoRow label="Categoria" value={veiculo.extra.especie || "PARTICULAR"} />
+                        <InfoRow label="Categoria" value={veiculo.extra?.especie || "PARTICULAR"} />
                     </InfoCard>
                 </div>
 
