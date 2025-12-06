@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import fetch from 'node-fetch'; // Node 18+ has global fetch, but keep for compatibility
 import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -27,6 +28,41 @@ const headers = {
     Accept: 'application/json',
     Authorization: 'Basic ' + Buffer.from(process.env.VITE_PAGARME_SECRET_KEY + ':').toString('base64'),
 };
+
+const SECRET_KEY = process.env.VITE_PAGARME_SECRET_KEY || 'default_secret_dev';
+const ADMIN_PASSWORD = process.env.VITE_ADMIN_PASSWORD;
+
+// Auth Middleware
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: 'Token não fornecido' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    try {
+        jwt.verify(token, SECRET_KEY);
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: 'Token inválido ou expirado' });
+    }
+};
+
+// Login Endpoint
+app.post('/api/login', (req, res) => {
+    const { password } = req.body;
+    console.log('Login attempt:', {
+        received: password,
+        expected: ADMIN_PASSWORD,
+        match: password === ADMIN_PASSWORD
+    });
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: 'Senha incorreta' });
+    }
+    const token = jwt.sign({ role: 'admin' }, SECRET_KEY, { expiresIn: '12h' });
+    res.json({ token });
+});
 
 // Create Pix endpoint
 app.post('/api/create-pix', async (req, res) => {
@@ -75,8 +111,21 @@ app.get('/api/get-order', async (req, res) => {
     }
 });
 
-// List orders
-app.get('/api/list-orders', async (req, res) => {
+// In-memory storage for manual payment overrides
+const manualPaidOrders = new Set();
+
+// Mark order as paid manually (Protected)
+app.post('/api/orders/:id/pay', authenticate, (req, res) => {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: 'Missing order ID' });
+
+    manualPaidOrders.add(id);
+    console.log(`Order ${id} manually marked as paid`);
+    res.json({ message: 'Order marked as paid successfully', status: 'paid' });
+});
+
+// List orders (Protected) mechanism updated to merge manual status
+app.get('/api/list-orders', authenticate, async (req, res) => {
     try {
         const response = await fetch(`${baseURL}/orders?page=1&size=50&sort=created_at&order=desc`, { headers });
         if (!response.ok) {
@@ -84,6 +133,17 @@ app.get('/api/list-orders', async (req, res) => {
             return res.status(response.status).json({ message: err.message || 'Erro ao buscar pedidos' });
         }
         const data = await response.json();
+
+        // Merge manual status
+        if (data.data && Array.isArray(data.data)) {
+            data.data = data.data.map(order => {
+                if (manualPaidOrders.has(order.id)) {
+                    return { ...order, status: 'paid' };
+                }
+                return order;
+            });
+        }
+
         res.json(data);
     } catch (err) {
         console.error('Server error:', err);
@@ -94,13 +154,13 @@ app.get('/api/list-orders', async (req, res) => {
 // In-memory coupon storage
 const coupons = [];
 
-// Get all coupons
-app.get('/api/coupons', (req, res) => {
+// Get all coupons (Protected)
+app.get('/api/coupons', authenticate, (req, res) => {
     res.json(coupons);
 });
 
-// Create a new coupon
-app.post('/api/coupons', (req, res) => {
+// Create a new coupon (Protected)
+app.post('/api/coupons', authenticate, (req, res) => {
     const { code, discount } = req.body;
     if (!code || discount == null) return res.status(400).json({ message: 'Code and discount are required' });
     if (coupons.find(c => c.code === code)) return res.status(409).json({ message: 'Coupon already exists' });
@@ -108,8 +168,8 @@ app.post('/api/coupons', (req, res) => {
     res.status(201).json({ code, discount });
 });
 
-// Delete a coupon
-app.delete('/api/coupons/:code', (req, res) => {
+// Delete a coupon (Protected)
+app.delete('/api/coupons/:code', authenticate, (req, res) => {
     const { code } = req.params;
     const index = coupons.findIndex(c => c.code === code);
     if (index === -1) return res.status(404).json({ message: 'Coupon not found' });

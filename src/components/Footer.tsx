@@ -137,40 +137,40 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-info-section-bg to-background border-t border-border/50">
-      <div className="container mx-auto px-4 py-12 lg:py-16">
+    <footer className="bg-white border-t border-gray-100">
+      <div className="container mx-auto px-4 py-8 lg:py-10">
 
         {/* DESKTOP LAYOUT (Hidden on mobile) */}
-        <div className="hidden lg:grid grid-cols-5 gap-12">
+        <div className="hidden lg:grid grid-cols-5 gap-8">
           {/* Coluna 1 - Informações da Empresa */}
-          <ScrollReveal className="col-span-2 space-y-6">
-            <div className="space-y-4">
+          <ScrollReveal className="col-span-2 space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <img
                   src="/uploads/logo nova.png"
                   alt="ConfereVeicular"
-                  className="h-12 w-auto"
+                  className="h-10 w-auto"
                 />
               </div>
-              <p className="text-muted-foreground text-sm leading-relaxed max-w-md">
+              <p className="text-gray-500 text-sm leading-relaxed max-w-md">
                 Plataforma líder em consultas veiculares no Brasil. Oferecemos informações
                 precisas e atualizadas sobre veículos emplacados, com dados confiáveis
                 diretamente dos órgãos oficiais.
               </p>
 
               {/* Indicadores de Confiança */}
-              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <div className="flex flex-wrap gap-4 text-xs text-gray-400">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <span>+10k consultas realizadas</span>
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  <span>+10k consultas</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <span>Dados atualizados em tempo real</span>
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  <span>Dados reais</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-success rounded-full"></div>
-                  <span>Segurança SSL/HTTPS</span>
+                  <div className="w-1.5 h-1.5 bg-success rounded-full"></div>
+                  <span>Site Seguro</span>
                 </div>
               </div>
             </div>
@@ -178,21 +178,21 @@ const Footer = () => {
 
           {/* Coluna 2 - Navegação */}
           <ScrollReveal delay={100} className="space-y-4">
-            <h3 className="font-semibold text-primary text-base">Navegação</h3>
-            <ul className="space-y-2">
+            <h3 className="uppercase tracking-wider text-xs font-bold text-gray-400">Navegação</h3>
+            <ul className="space-y-1.5">
               {footerLinks.navegacao.map((link, index) => (
                 <li key={index}>
                   {link.type === "home" ? (
                     <button
                       onClick={navigateToHome}
-                      className="text-muted-foreground hover:text-primary transition-colors text-sm hover:underline text-left"
+                      className="text-gray-500 hover:text-primary transition-colors text-sm hover:underline text-left"
                     >
                       {link.name}
                     </button>
                   ) : link.type === "about" ? (
                     <button
                       onClick={navigateToAboutUs}
-                      className="text-muted-foreground hover:text-primary transition-colors text-sm hover:underline text-left"
+                      className="text-gray-500 hover:text-primary transition-colors text-sm hover:underline text-left"
                     >
                       {link.name}
                     </button>
@@ -201,14 +201,14 @@ const Footer = () => {
                       href={`https://wa.me/5511921021578?text=${encodeURIComponent("Olá! Gostaria de entrar em contato para mais informações sobre os serviços.")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-primary transition-colors text-sm hover:underline text-left"
+                      className="text-gray-500 hover:text-primary transition-colors text-sm hover:underline text-left"
                     >
                       {link.name}
                     </a>
                   ) : (
                     <button
                       onClick={() => scrollToSection(link.href)}
-                      className="text-muted-foreground hover:text-primary transition-colors text-sm hover:underline text-left"
+                      className="text-gray-500 hover:text-primary transition-colors text-sm hover:underline text-left"
                     >
                       {link.name}
                     </button>
@@ -220,15 +220,15 @@ const Footer = () => {
 
           {/* Coluna 3 - Serviços */}
           <ScrollReveal delay={150} className="space-y-4">
-            <h3 className="font-semibold text-accent text-base">Serviços</h3>
-            <ul className="space-y-2">
+            <h3 className="uppercase tracking-wider text-xs font-bold text-gray-400">Serviços</h3>
+            <ul className="space-y-1.5">
               {footerLinks.servicos.map((service, index) => (
                 <li key={index}>
                   <a
                     href={`https://wa.me/5511921021578?text=${encodeURIComponent(service.whatsappMessage)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-accent transition-colors text-sm hover:underline text-left"
+                    className="text-gray-500 hover:text-accent transition-colors text-sm hover:underline text-left"
                   >
                     {service.name}
                   </a>
@@ -240,8 +240,8 @@ const Footer = () => {
           {/* Coluna 4 - Contato e Redes Sociais */}
           <ScrollReveal delay={200} className="space-y-6">
             <div className="space-y-4">
-              <h3 className="font-semibold text-primary text-base">Contato</h3>
-              <div className="space-y-3 text-sm text-muted-foreground">
+              <h3 className="uppercase tracking-wider text-xs font-bold text-gray-400">Contato</h3>
+              <div className="space-y-2 text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-accent flex-shrink-0" />
                   <span>confereveicular@gmail.com</span>
@@ -262,21 +262,21 @@ const Footer = () => {
             </div>
 
             <div className="space-y-4">
-              <h3 className="font-semibold text-accent text-base">Redes Sociais</h3>
+              <h3 className="uppercase tracking-wider text-xs font-bold text-gray-400">Redes Sociais</h3>
               <div className="flex gap-3">
                 <button
                   onClick={() => window.open('https://facebook.com/conferveicular', '_blank')}
-                  className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center hover:bg-accent/20 hover:scale-105 transition-all duration-200"
+                  className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center hover:bg-gray-100 hover:scale-105 transition-all duration-200"
                   aria-label="Facebook"
                 >
-                  <Facebook className="h-5 w-5 text-accent" />
+                  <Facebook className="h-5 w-5 text-gray-600" />
                 </button>
                 <button
                   onClick={() => window.open('https://instagram.com/confereveicular', '_blank')}
-                  className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center hover:bg-accent/20 hover:scale-105 transition-all duration-200"
+                  className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center hover:bg-gray-100 hover:scale-105 transition-all duration-200"
                   aria-label="Instagram"
                 >
-                  <Instagram className="h-5 w-5 text-accent" />
+                  <Instagram className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
             </div>
@@ -284,22 +284,22 @@ const Footer = () => {
         </div>
 
         {/* MOBILE LAYOUT (Hidden on desktop) */}
-        <div className="lg:hidden space-y-8">
+        <div className="lg:hidden space-y-6">
           {/* Logo & Info */}
           <div className="space-y-4 text-center">
             <div className="flex justify-center">
               <img
                 src="/uploads/logo nova.png"
                 alt="ConfereVeicular"
-                className="h-10 w-auto"
+                className="h-8 w-auto"
               />
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-gray-500 text-sm leading-relaxed">
               Plataforma líder em consultas veiculares no Brasil.
             </p>
 
             {/* Trust Indicators - Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground text-left max-w-xs mx-auto">
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400 text-left max-w-xs mx-auto">
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 bg-success rounded-full flex-shrink-0"></div>
                 <span>+10k consultas</span>
@@ -323,25 +323,25 @@ const Footer = () => {
           <Accordion type="single" collapsible className="w-full">
 
             <AccordionItem value="navegacao">
-              <AccordionTrigger className="text-primary hover:text-primary/80">Navegação</AccordionTrigger>
+              <AccordionTrigger className="uppercase tracking-wider text-xs font-bold text-gray-600 hover:text-primary py-3">Navegação</AccordionTrigger>
               <AccordionContent>
-                <ul className="space-y-3 pt-2">
+                <ul className="space-y-2 pt-1">
                   {footerLinks.navegacao.map((link, index) => (
                     <li key={index}>
                       {link.type === "home" ? (
-                        <button onClick={navigateToHome} className="text-muted-foreground hover:text-primary text-sm w-full text-left py-1">
+                        <button onClick={navigateToHome} className="text-gray-500 hover:text-primary text-sm w-full text-left py-1">
                           {link.name}
                         </button>
                       ) : link.type === "about" ? (
-                        <button onClick={navigateToAboutUs} className="text-muted-foreground hover:text-primary text-sm w-full text-left py-1">
+                        <button onClick={navigateToAboutUs} className="text-gray-500 hover:text-primary text-sm w-full text-left py-1">
                           {link.name}
                         </button>
                       ) : link.type === "whatsapp" ? (
-                        <a href={`https://wa.me/5511921021578?text=${encodeURIComponent("Olá! Gostaria de entrar em contato.")}`} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary text-sm w-full text-left block py-1">
+                        <a href={`https://wa.me/5511921021578?text=${encodeURIComponent("Olá! Gostaria de entrar em contato.")}`} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-primary text-sm w-full text-left block py-1">
                           {link.name}
                         </a>
                       ) : (
-                        <button onClick={() => scrollToSection(link.href)} className="text-muted-foreground hover:text-primary text-sm w-full text-left py-1">
+                        <button onClick={() => scrollToSection(link.href)} className="text-gray-500 hover:text-primary text-sm w-full text-left py-1">
                           {link.name}
                         </button>
                       )}
@@ -352,16 +352,16 @@ const Footer = () => {
             </AccordionItem>
 
             <AccordionItem value="servicos">
-              <AccordionTrigger className="text-accent hover:text-accent/80">Serviços</AccordionTrigger>
+              <AccordionTrigger className="uppercase tracking-wider text-xs font-bold text-gray-600 hover:text-primary py-3">Serviços</AccordionTrigger>
               <AccordionContent>
-                <ul className="space-y-3 pt-2">
+                <ul className="space-y-2 pt-1">
                   {footerLinks.servicos.map((service, index) => (
                     <li key={index}>
                       <a
                         href={`https://wa.me/5511921021578?text=${encodeURIComponent(service.whatsappMessage)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-muted-foreground hover:text-accent text-sm w-full text-left block py-1"
+                        className="text-gray-500 hover:text-accent text-sm w-full text-left block py-1"
                       >
                         {service.name}
                       </a>
@@ -372,9 +372,9 @@ const Footer = () => {
             </AccordionItem>
 
             <AccordionItem value="contato">
-              <AccordionTrigger className="text-primary hover:text-primary/80">Contato</AccordionTrigger>
+              <AccordionTrigger className="uppercase tracking-wider text-xs font-bold text-gray-600 hover:text-primary py-3">Contato</AccordionTrigger>
               <AccordionContent>
-                <div className="space-y-4 pt-2 text-sm text-muted-foreground">
+                <div className="space-y-3 pt-1 text-sm text-gray-500">
                   <div className="flex items-center gap-3">
                     <Mail className="h-4 w-4 text-accent flex-shrink-0" />
                     <span>confereveicular@gmail.com</span>
@@ -394,33 +394,38 @@ const Footer = () => {
           </Accordion>
 
           {/* Social Media - Mobile */}
-          <div className="flex gap-4 justify-center pt-4">
+          <div className="flex gap-4 justify-center pt-2">
             <button
               onClick={() => window.open('https://facebook.com/conferveicular', '_blank')}
-              className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center hover:bg-accent/20 transition-colors"
+              className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
               aria-label="Facebook"
             >
-              <Facebook className="h-6 w-6 text-accent" />
+              <Facebook className="h-5 w-5 text-gray-600" />
             </button>
             <button
               onClick={() => window.open('https://instagram.com/confereveicular', '_blank')}
-              className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center hover:bg-accent/20 transition-colors"
+              className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
               aria-label="Instagram"
             >
-              <Instagram className="h-6 w-6 text-accent" />
+              <Instagram className="h-5 w-5 text-gray-600" />
             </button>
           </div>
         </div>
 
         {/* Separador */}
-        <div className="border-t border-border/50 mt-12 pt-8">
+        <div className="border-t border-gray-100 mt-8 pt-6">
           {/* Copyright e Informações Corporativas */}
           <div className="text-center space-y-2">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">
               © 2025 Confere Veicular Consultoria LTDA - CNPJ: 63.799.632/0001-87 - Todos os direitos reservados
             </p>
-            <p className="text-xs text-muted-foreground/80">
-              Este site é protegido por SSL e utiliza as melhores práticas de segurança
+            <div className="flex justify-center gap-4 text-[10px] text-gray-400 my-1 font-medium">
+              <Link to="/termos" className="hover:text-primary transition-colors">TERMOS DE USO</Link>
+              <span>•</span>
+              <Link to="/privacidade" className="hover:text-primary transition-colors">POLÍTICA DE PRIVACIDADE</Link>
+            </div>
+            <p className="text-[10px] text-gray-400">
+              Site protegido por SSL
             </p>
           </div>
         </div>

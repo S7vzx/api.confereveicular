@@ -40,20 +40,20 @@ const VehicleInfoSection = () => {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary leading-tight">
               Seu portal completo para consultas veiculares rápidas e detalhadas.
             </h2>
-            
+
             <p className="text-muted-foreground text-base sm:text-lg leading-relaxed">
-              Somos o maior site de consultas veiculares do Brasil, com anos de experiência e referência no mercado. 
-              Descubra mais de 20 informações essenciais sobre veículos, como chassi, Renavam, cor, modelo, roubo e furto, 
-              tudo com rapidez e confiança. Garanta segurança e tranquilidade ao comprar ou vender veículos 
+              Somos o maior site de consultas veiculares do Brasil, com anos de experiência e referência no mercado.
+              Descubra mais de 20 informações essenciais sobre veículos, como chassi, Renavam, cor, modelo, roubo e furto,
+              tudo com rapidez e confiança. Garanta segurança e tranquilidade ao comprar ou vender veículos
               com nossa plataforma, reconhecida pela eficiência e confiabilidade.
             </p>
 
-            <Button 
-              variant="cta" 
-              size="lg" 
+            <Button
+              variant="cta"
+              size="lg"
               className="text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 w-full sm:w-auto"
               onClick={() => {
-                document.getElementById('consulta-principal')?.scrollIntoView({ 
+                document.getElementById('consulta-principal')?.scrollIntoView({
                   behavior: 'smooth',
                   block: 'center'
                 });
@@ -68,11 +68,11 @@ const VehicleInfoSection = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-8 lg:mt-0">
             {infoCards.map((card, index) => (
               <ScrollReveal key={index} delay={300 + index * 100}>
-                <Card className="p-4 sm:p-6 hover:shadow-md transition-all duration-200 border-l-4 border-l-accent shadow-sm bg-card">
-                  <h3 className="font-semibold text-primary mb-2 sm:mb-3 text-sm sm:text-base leading-tight">
+                <Card className="p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-gray-100 shadow-sm bg-white/50 backdrop-blur-sm group">
+                  <h3 className="font-bold text-gray-800 mb-2 sm:mb-3 text-sm sm:text-base leading-tight group-hover:text-primary transition-colors">
                     {card.title}
                   </h3>
-                  <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+                  <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
                     {card.description}
                   </p>
                 </Card>

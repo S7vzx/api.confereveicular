@@ -80,7 +80,7 @@ const Header = () => {
   };
 
   return (
-    <header className="w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+    <header className="w-full bg-white/70 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 shadow-sm supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center" onClick={handleLogoClick}>

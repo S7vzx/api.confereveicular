@@ -2,8 +2,10 @@
 // In-memory storage for coupons (WARNING: Volatile on serverless)
 // In a real production app, use a database.
 let coupons = [];
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = process.env.VITE_PAGARME_SECRET_KEY || 'default_secret_dev';
 
-export const handler = async (event, context) => {
+exports.handler = async (event, context) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',

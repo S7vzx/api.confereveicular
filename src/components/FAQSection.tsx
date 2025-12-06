@@ -43,19 +43,19 @@ const FAQSection = () => {
               FAQ - Perguntas Frequentes
             </h2>
           </ScrollReveal>
-          
+
           <ScrollReveal delay={200}>
-            <Accordion type="single" collapsible className="space-y-3 md:space-y-4">
+            <Accordion type="single" collapsible className="space-y-4">
               {faqItems.map((item, index) => (
-                <AccordionItem 
-                  key={index} 
+                <AccordionItem
+                  key={index}
                   value={`item-${index}`}
-                  className="bg-card border-l-4 border-l-accent border-r border-border rounded-lg shadow-sm px-4 sm:px-6"
+                  className="bg-white border text-left border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 px-2"
                 >
-                  <AccordionTrigger className="text-left font-semibold text-primary hover:no-underline py-4 sm:py-6 text-sm sm:text-base">
+                  <AccordionTrigger className="text-left font-bold text-slate-800 hover:no-underline hover:text-primary py-5 px-6 text-base sm:text-lg">
                     {item.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4 sm:pb-6 pt-0 text-sm sm:text-base">
+                  <AccordionContent className="text-slate-600 pb-6 px-6 pt-0 text-sm sm:text-base leading-relaxed">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>

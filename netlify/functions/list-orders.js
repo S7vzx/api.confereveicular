@@ -1,5 +1,8 @@
 import fetch from 'node-fetch';
 import { Buffer } from 'buffer';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || 'default_secret_dev';
 
 export const handler = async (event, context) => {
     // Enable CORS
@@ -20,6 +23,19 @@ export const handler = async (event, context) => {
             headers,
             body: JSON.stringify({ message: 'Method Not Allowed' })
         };
+    }
+
+    // Auth Check
+    const authHeader = event.headers.authorization || event.headers.Authorization;
+    if (!authHeader) {
+        return { statusCode: 401, headers, body: JSON.stringify({ message: 'Missing Authorization Header' }) };
+    }
+
+    try {
+        const token = authHeader.split(' ')[1];
+        jwt.verify(token, JWT_SECRET_KEY);
+    } catch (err) {
+        return { statusCode: 401, headers, body: JSON.stringify({ message: 'Invalid Token' }) };
     }
 
     try {

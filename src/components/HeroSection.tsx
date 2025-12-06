@@ -144,7 +144,7 @@ const HeroSection = memo(() => {
                     paddingBottom: '1.25rem',
                     lineHeight: '2'
                   }}
-                  className={`text-center ${inputFontSize} font-bold tracking-wider uppercase border-2 border-gray-300 bg-transparent focus-visible:ring-0 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1 placeholder:text-xl placeholder:sm:text-2xl placeholder:md:text-3xl placeholder:lg:text-4xl placeholder:font-bold`}
+                  className={`text-center ${inputFontSize} font-bold tracking-wider uppercase border border-gray-200 bg-white/50 backdrop-blur-sm focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary h-14 sm:h-16 px-4 sm:px-6 w-full md:flex-1 placeholder:text-gray-300 placeholder:text-xl placeholder:sm:text-2xl placeholder:md:text-3xl placeholder:lg:text-4xl placeholder:font-bold shadow-sm transition-all duration-300`}
                 />
                 <Button
                   data-track="consulta-principal"
@@ -253,10 +253,8 @@ const HeroSection = memo(() => {
                 <img
                   src="/uploads/f5472cd0-a719-4870-a846-6a0f274a9336.png"
                   alt="Especialista em consultas veiculares - ConfereVeicular"
-                  className="w-full max-w-sm sm:max-w-md lg:max-w-2xl h-auto object-contain transition-all duration-700 ease-out transform group-hover:scale-105 group-hover:-translate-y-2 filter group-hover:brightness-110 group-hover:drop-shadow-2xl"
+                  className="w-full max-w-sm sm:max-w-md lg:max-w-2xl h-auto object-contain transition-all duration-700 ease-out transform group-hover:scale-105 group-hover:-translate-y-2"
                 />
-                {/* Subtle glow effect on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out blur-xl -z-10"></div>
               </div>
             </div>
           </ScrollReveal>
@@ -266,8 +264,8 @@ const HeroSection = memo(() => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-12 md:mt-16 pt-8 md:pt-16 relative z-20">
           {stats.map((stat, index) => (
             <ScrollReveal key={index} delay={index * 100}>
-              <div className="bg-white/95 backdrop-blur-sm border-2 border-success rounded-xl shadow-lg p-6 flex flex-col items-center text-center gap-4 hover:shadow-xl transition-all duration-300 min-h-[140px] hover:bg-white">
-                <div className="w-12 h-12 border-2 border-success rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg p-6 flex flex-col items-center text-center gap-4 hover:shadow-xl hover:scale-105 transition-all duration-300 min-h-[140px] hover:bg-white group">
+                <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-success/20 transition-colors">
                   <stat.icon className="h-6 w-6 text-success" />
                 </div>
                 <div className="flex-1">

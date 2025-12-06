@@ -32,8 +32,8 @@ const VideoTestimonialCard: React.FC<VideoTestimonialCardProps> = ({ video }) =>
       <Card className="bg-card border border-border shadow-medium group-hover:shadow-extra-large transition-all duration-500 overflow-hidden relative h-full flex flex-col">
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-       
-       <CardContent className="p-0 relative z-10 flex flex-col h-full">
+
+        <CardContent className="p-0 relative z-10 flex flex-col h-full">
           {/* Video Area */}
           <div className="relative aspect-video bg-primary/10 overflow-hidden">
             {isPlaying && video.embedUrl ? (
@@ -48,7 +48,7 @@ const VideoTestimonialCard: React.FC<VideoTestimonialCardProps> = ({ video }) =>
               />
             ) : (
               // Thumbnail with play button
-              <div 
+              <div
                 className="cursor-pointer group/video w-full h-full"
                 onClick={handlePlayVideo}
               >
@@ -84,12 +84,12 @@ const VideoTestimonialCard: React.FC<VideoTestimonialCardProps> = ({ video }) =>
 
           {/* Card Content */}
           <div className="p-6 flex-1 flex flex-col justify-between">
-           <div className="flex items-center gap-1 mb-4">
-             {[...Array(video.rating)].map((_, i) => (
-               <Star key={i} className="w-4 h-4 text-accent fill-current" />
-             ))}
-           </div>
-            
+            <div className="flex items-center gap-1 mb-4">
+              {[...Array(video.rating)].map((_, i) => (
+                <Star key={i} className="w-4 h-4 text-amber-400 fill-current" />
+              ))}
+            </div>
+
             <div className="mb-6 flex-1">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
@@ -110,7 +110,7 @@ const VideoTestimonialCard: React.FC<VideoTestimonialCardProps> = ({ video }) =>
                 {video.clientName[0]}
               </div>
             </div>
-         </div>
+          </div>
         </CardContent>
       </Card>
     </div>

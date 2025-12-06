@@ -13,7 +13,7 @@ const VideoExplainerSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Coluna Esquerda - Vídeo/Imagem */}
           <ScrollReveal className="relative">
-            <div className="bg-card rounded-2xl shadow-lg overflow-hidden border border-gray-100 group">
+            <div className="bg-white rounded-2xl shadow-2xl shadow-gray-200/50 overflow-hidden border border-white/20 group transform hover:scale-[1.01] transition-all duration-500">
               <div className="relative w-full aspect-video bg-gray-900">
                 {!isPlaying ? (
                   <div
@@ -73,7 +73,7 @@ const VideoExplainerSection = () => {
 
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto"
               onClick={() => {
                 document.getElementById('consulta-principal')?.scrollIntoView({
                   behavior: 'smooth',

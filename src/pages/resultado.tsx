@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info, Copy, Printer, Crown } from "lucide-react";
+import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info, Copy, Printer, Crown, Search } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { consultarPlaca, VehicleData } from "@/services/api";
 import MinimalFooter from "@/components/MinimalFooter";
 import { useToast } from "@/hooks/use-toast";
@@ -41,12 +43,91 @@ export default function ResultadoConsulta() {
         fetchData();
     }, [placa, navigate]);
 
+    const [scanningStep, setScanningStep] = useState(0);
+    const [progress, setProgress] = useState(0);
+
+    // Simulator for scanning steps
+    useEffect(() => {
+        if (loading) {
+            const steps = [
+                { msg: "Conectando ao Detran...", time: 0 },
+                { msg: "Verificando Bases Nacionais...", time: 1000 },
+                { msg: "Buscando Histórico de Leilão...", time: 2500 },
+                { msg: "Analisando Débitos e Multas...", time: 4000 },
+                { msg: "Compilando Relatório...", time: 5500 }
+            ];
+
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                setProgress((old) => Math.min(old + 1, 100));
+            }, 60);
+
+            const stepInterval = setInterval(() => {
+                currentStep++;
+                if (currentStep < steps.length) {
+                    setScanningStep(currentStep);
+                }
+            }, 1500);
+
+            return () => {
+                clearInterval(interval);
+                clearInterval(stepInterval);
+            };
+        }
+    }, [loading]);
+
     if (loading) {
+        const steps = [
+            "Conectando ao Detran...",
+            "Verificando Bases Nacionais...",
+            "Buscando Histórico de Leilão...",
+            "Analisando Débitos e Multas...",
+            "Compilando Relatório..."
+        ];
+
         return (
             <div className="min-h-screen bg-[#f0f2f5] flex flex-col items-center justify-center p-4">
-                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-                <h2 className="text-xl font-bold text-gray-700">Consultando base de dados...</h2>
-                <p className="text-gray-500">Aguarde um momento enquanto buscamos as informações.</p>
+                <div className="max-w-md w-full text-center space-y-6">
+                    <div className="relative w-24 h-24 mx-auto mb-8">
+                        <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                        <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <Search className="absolute inset-0 m-auto w-10 h-10 text-primary animate-pulse" />
+                    </div>
+
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold text-gray-800 animate-pulse">
+                            {steps[scanningStep] || "Processando..."}
+                        </h2>
+                        <p className="text-gray-500">Aguarde, estamos varrendo mais de 40 bases de dados.</p>
+                    </div>
+
+                    <div className="space-y-1">
+                        <Progress value={progress} className="h-2" />
+                        <div className="flex justify-between text-xs text-gray-400">
+                            <span>Início</span>
+                            <span>{progress}%</span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-left opacity-70 mt-8">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`w-3 h-3 ${scanningStep > 0 ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className={scanningStep > 0 ? 'text-gray-700 font-medium' : 'text-gray-400'}>Detran</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`w-3 h-3 ${scanningStep > 1 ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className={scanningStep > 1 ? 'text-gray-700 font-medium' : 'text-gray-400'}>Denatran</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`w-3 h-3 ${scanningStep > 2 ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className={scanningStep > 2 ? 'text-gray-700 font-medium' : 'text-gray-400'}>Leilões</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`w-3 h-3 ${scanningStep > 3 ? 'text-green-500' : 'text-gray-300'}`} />
+                            <span className={scanningStep > 3 ? 'text-gray-700 font-medium' : 'text-gray-400'}>Financeiras</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -196,6 +277,23 @@ Gerado por Confere Veicular
                         <Printer className="w-4 h-4" />
                         Imprimir
                     </Button>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 shadow-sm transition-all">
+                                <FileText className="w-4 h-4" />
+                                Ver Modelo
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl h-[80vh] overflow-y-auto">
+                            <div className="space-y-4">
+                                <h3 className="text-2xl font-bold text-center border-b pb-4">Modelo de Relatório Completo</h3>
+                                <img src="/uploads/modelo-relatorio.png" alt="Exemplo de Relatório" className="w-full h-auto rounded shadow-lg opacity-50" onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML += '<p class="text-center text-gray-500 py-10">Visualização de modelo indisponível no momento.</p>'
+                                }} />
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                     <Button
                         className="h-12 px-8 rounded-xl gap-2 bg-gradient-to-r from-[#00Cca7] to-[#00b896] hover:from-[#00b896] hover:to-[#00a385] text-white font-bold border-0 shadow-lg shadow-[#00Cca7]/25 hover:shadow-xl hover:shadow-[#00Cca7]/35 hover:-translate-y-0.5 transition-all text-base"
                         onClick={() => navigate(`/checkout?placa=${placa}`)}
@@ -219,12 +317,12 @@ Gerado por Confere Veicular
                     </InfoCard>
 
                     <InfoCard title="Identificação" icon={FileText} iconColor="text-indigo-600" iconBg="bg-indigo-50">
-                        <LockedRow label="Renavam" />
-                        <LockedRow label="Chassi" />
-                        <LockedRow label="Motor" />
+                        <LockedRow label="Renavam" value="************" blur={false} />
+                        <LockedRow label="Chassi" value={veiculo.extra?.chassi ? `${veiculo.extra.chassi.substring(0, 5)}*************` : "************"} blur={false} />
+                        <LockedRow label="Motor" value="************" blur={false} />
                         <InfoRow label="Procedência" value={veiculo.extra?.procedencia || veiculo.origem || "NACIONAL"} />
-                        <LockedRow label="Câmbio" />
-                        <LockedRow label="Carroceria" />
+                        <LockedRow label="Câmbio" value="************" blur={false} />
+                        <LockedRow label="Carroceria" value="************" blur={false} />
                         <InfoRow label="Categoria" value={veiculo.extra?.especie || "PARTICULAR"} />
                     </InfoCard>
                 </div>
@@ -232,15 +330,15 @@ Gerado por Confere Veicular
                 {/* Grid Informações Adicionais */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                     <InfoCard title="Proprietário" icon={User} iconColor="text-purple-600" iconBg="bg-purple-50">
-                        <LockedRow label="Nome do Proprietário" />
-                        <LockedRow label="Doc. Proprietário (Parcial)" />
-                        <LockedRow label="Tipo Doc. Proprietário" />
+                        <LockedRow label="Nome do Proprietário" value="***********************" blur={false} />
+                        <LockedRow label="Doc. Proprietário (Parcial)" value="***.***.***-**" blur={false} />
+                        <LockedRow label="Tipo Doc. Proprietário" value="************" blur={false} />
                         <InfoRow label="Tipo Doc. Faturado" value={veiculo.extra?.tipo_doc_faturado || '-'} />
                         <InfoRow label="Estado (UF) Faturado" value={veiculo.extra?.uf_faturado || '-'} />
                     </InfoCard>
 
                     <InfoCard title="Outros" icon={Info} iconColor="text-teal-600" iconBg="bg-teal-50">
-                        <LockedRow label="Situação Roubo/Furto" />
+                        <LockedRow label="Situação Roubo/Furto" value="NADA CONSTA" isAlert={true} />
                         <InfoRow label="Município" value={veiculo.municipio || '-'} />
                         <InfoRow label="Estado (UF)" value={veiculo.uf || '-'} />
                         <InfoRow label="Segmento" value={veiculo.segmento || '-'} />
@@ -382,14 +480,26 @@ const InfoRow = ({ label, value }: { label: string, value?: string }) => (
     </div>
 );
 
-const LockedRow = ({ label }: { label: string }) => (
-    <div className="flex items-center justify-between py-3 px-2 border-b border-gray-50 last:border-0 hover:bg-red-50/30 rounded-lg transition-colors group cursor-pointer">
-        <span className="font-medium text-gray-500 text-sm group-hover:text-red-400 transition-colors">{label}</span>
-        <div className="relative flex items-center bg-gray-100 px-3 py-1.5 rounded-md border border-gray-200 group-hover:border-red-200 group-hover:bg-red-50 transition-all overflow-hidden">
-            <span className="text-gray-400 font-bold text-sm blur-[4px] select-none group-hover:text-red-300 transition-colors">DADO SIGILOSO</span>
-            <div className="absolute inset-0 flex items-center justify-center">
-                <Lock className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-500 transition-colors" />
-            </div>
+const LockedRow = ({ label, value = "DADO SIGILOSO", isAlert = false, blur = true }: { label: string, value?: string, isAlert?: boolean, blur?: boolean }) => (
+    <div className="flex items-center justify-between py-3 px-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg transition-colors group cursor-pointer" onClick={() => document.getElementById('checkout-btn')?.click()}>
+        <span className="font-medium text-gray-500 text-sm group-hover:text-primary transition-colors flex items-center gap-2">
+            {label}
+            {isAlert && <Badge variant="destructive" className="h-5 px-1.5 text-[10px] animate-pulse">ALERTA</Badge>}
+        </span>
+        <div className={`relative flex items-center px-3 py-1.5 rounded-md border transition-all overflow-hidden ${isAlert ? 'bg-red-50 border-red-100' : 'bg-gray-100 border-gray-200 group-hover:border-primary/30 group-hover:bg-blue-50'}`}>
+            <span className={`font-bold text-sm select-none transition-colors ${isAlert ? 'text-red-800' : 'text-gray-900 group-hover:text-blue-900'} ${blur ? 'blur-[6px] text-gray-400' : ''}`}>
+                {value}
+            </span>
+            {blur && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                    {isAlert ? (
+                        <span className="text-[10px] font-black text-red-600 bg-red-100/90 px-2 py-0.5 rounded shadow-sm">VERIFICAR</span>
+                    ) : (
+                        <Lock className="w-3.5 h-3.5 text-gray-500 group-hover:text-primary transition-colors" />
+                    )}
+                </div>
+            )}
+            {!blur && <Lock className="w-3 h-3 text-gray-400 ml-2" />}
         </div>
     </div>
 );
