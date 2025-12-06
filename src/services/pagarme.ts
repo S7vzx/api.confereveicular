@@ -159,13 +159,16 @@ const pagarme = {
         return { valid: true, discount: data.discount };
     },
     login: async (password: string) => {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-        });
-        if (!response.ok) throw new Error('Falha no login');
-        return response.json();
+        // Validate password directly against environment variable
+        // This works both in development and production (Netlify)
+        const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+
+        if (password !== correctPassword) {
+            throw new Error('Falha no login');
+        }
+
+        // Return a simple token (just for UI state, not for security)
+        return { token: 'authenticated' };
     },
     markAsPaid: async (orderId: string, token: string) => {
         // Update directly in Supabase instead of calling server
