@@ -11,13 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import MinimalFooter from "@/components/MinimalFooter";
 import pagarme from "@/services/pagarme";
-import { RefreshCw, CheckCircle, XCircle, Clock, DollarSign, Users, BarChart3, TrendingUp, Calendar, Download, Tag, Trash2, BellRing, Filter, PieChart, Sun, Moon, CheckSquare, ShieldAlert } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, DollarSign, Users, BarChart3, TrendingUp, Calendar, Download, Tag, Trash2, BellRing, Filter, PieChart, Sun, Moon, CheckSquare, ShieldAlert, Volume2, VolumeX, Settings, Play } from "lucide-react";
 import { useTheme } from "next-themes";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 
 import { GridBackground } from "@/components/GridBackground";
-// Notification sound
-const NOTIFICATION_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
+// Default notification sound (Cash Register)
+const DEFAULT_NOTIFICATION_SOUND = "https://www.myinstants.com/media/sounds/cash-register-purchase.mp3";
 
 const Admin = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -42,6 +42,53 @@ const Admin = () => {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const previousOrderCountRef = useRef(0);
     const [hasNewNotification, setHasNewNotification] = useState(false);
+    const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+    const [notificationSoundUrl, setNotificationSoundUrl] = useState(DEFAULT_NOTIFICATION_SOUND);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    // Initialize state from localStorage after mount (client-side only)
+    useEffect(() => {
+        try {
+            const storedSoundEnabled = localStorage.getItem("admin_sound_enabled");
+            if (storedSoundEnabled !== null) {
+                setIsSoundEnabled(storedSoundEnabled !== "false");
+            }
+            const storedUrl = localStorage.getItem("admin_sound_url");
+            if (storedUrl) {
+                setNotificationSoundUrl(storedUrl);
+            }
+        } catch (e) {
+            console.error("Error loading settings:", e);
+        }
+    }, []);
+
+    const toggleSound = () => {
+        const newState = !isSoundEnabled;
+        setIsSoundEnabled(newState);
+        try {
+            localStorage.setItem("admin_sound_enabled", String(newState));
+        } catch (e) { }
+        toast({
+            title: newState ? "Som ativado" : "Som desativado",
+        });
+    };
+
+    const handleSaveSoundUrl = (url: string) => {
+        setNotificationSoundUrl(url);
+        localStorage.setItem("admin_sound_url", url);
+        // Update current audio instance
+        if (audioRef.current) {
+            audioRef.current.src = url;
+            audioRef.current.load();
+        }
+        toast({ title: "Som de notificação atualizado!" });
+    };
+
+    const testSound = () => {
+        const audio = new Audio(notificationSoundUrl);
+        audio.volume = 0.5;
+        audio.play().catch(e => toast({ title: "Erro ao reproduzir", variant: "destructive" }));
+    };
 
     // New Coupon State
     const [newCouponCode, setNewCouponCode] = useState("");
@@ -107,7 +154,11 @@ const Admin = () => {
                     description: `${newOrdersCount} novo(s) pedido(s) encontrado(s).`,
                     className: "bg-green-500 text-white border-none"
                 });
-                audioRef.current?.play().catch(e => console.log("Audio play failed interaction required:", e));
+
+                if (isSoundEnabled) {
+                    audioRef.current?.play().catch(e => console.log("Audio play failed interaction required:", e));
+                }
+
                 setHasNewNotification(true);
                 setTimeout(() => setHasNewNotification(false), 5000);
             }
@@ -141,7 +192,11 @@ const Admin = () => {
 
     // Initialize audio ref
     useEffect(() => {
-        audioRef.current = new Audio(NOTIFICATION_SOUND);
+        // Initialize audio ref
+        useEffect(() => {
+            audioRef.current = new Audio(notificationSoundUrl);
+            audioRef.current.volume = 0.5;
+        }, [notificationSoundUrl]);
         audioRef.current.volume = 0.5;
     }, []);
 
@@ -186,8 +241,13 @@ const Admin = () => {
         // Top Products Logic
         const productMap: Record<string, { count: number, revenue: number }> = {};
         currentPeriodOrders.filter(o => o.status === 'paid').forEach(order => {
-            // Assumes description contains product name, fallback to "Consulta Veicular"
-            const name = order.items[0]?.description || "Consulta Veicular";
+            let name = order.items[0]?.description || "Consulta Veicular";
+
+            // Normalize Product Names
+            if (name.includes("Placa")) name = "Consulta Completa";
+            else if (name.includes("Débitos")) name = "Débitos Veiculares";
+            else if (name.includes("Leilão")) name = "Consulta Leilão";
+
             if (!productMap[name]) productMap[name] = { count: 0, revenue: 0 };
             productMap[name].count += 1;
             productMap[name].revenue += order.items[0].amount;
@@ -362,14 +422,20 @@ const Admin = () => {
             });
     }, [orders, dateFilter]);
 
-    // Product Breakdown Data (Mock logic - Pagar.me items usually have description)
+    // Product Breakdown Data
     const productData = useMemo(() => {
         const breakdown: Record<string, number> = {};
         const activeOrders = filterOrdersByDate(orders, dateFilter).filter(o => o.status === 'paid');
 
         activeOrders.forEach(order => {
             order.items.forEach((item: any) => {
-                const name = item.description || "Produto Desconhecido";
+                let name = item.description || "Produto Desconhecido";
+
+                // Normalize Product Names
+                if (name.includes("Placa")) name = "Consulta Completa";
+                else if (name.includes("Débitos")) name = "Débitos Veiculares";
+                else if (name.includes("Leilão")) name = "Consulta Leilão";
+
                 breakdown[name] = (breakdown[name] || 0) + (item.amount / 100);
             });
         });
@@ -498,9 +564,72 @@ const Admin = () => {
                             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                         </Button>
+                        <Button variant="ghost" size="icon" onClick={toggleSound} title={isSoundEnabled ? "Desativar som" : "Ativar som"}>
+                            {isSoundEnabled ? (
+                                <Volume2 className="h-[1.2rem] w-[1.2rem]" />
+                            ) : (
+                                <VolumeX className="h-[1.2rem] w-[1.2rem] text-gray-400" />
+                            )}
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)} title="Configurações de Notificação">
+                            <Settings className="h-[1.2rem] w-[1.2rem]" />
+                        </Button>
                     </div>
                 </div>
             </header>
+
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Configurações de Notificação</DialogTitle>
+                        <DialogDescription>
+                            Personalize como você quer ser alertado sobre novas vendas.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-6 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <label className="text-base font-medium">Som de Notificação</label>
+                                <p className="text-sm text-gray-500">Ativar ou desativar alertas sonoros</p>
+                            </div>
+                            <Button
+                                variant={isSoundEnabled ? "default" : "outline"}
+                                onClick={toggleSound}
+                                className={isSoundEnabled ? "bg-[#19406C]" : ""}
+                            >
+                                {isSoundEnabled ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+                                {isSoundEnabled ? "Ativado" : "Desativado"}
+                            </Button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-base font-medium">Avatar URL do Som (MP3)</label>
+                            <div className="flex gap-2">
+                                <Input
+                                    value={notificationSoundUrl}
+                                    onChange={(e) => setNotificationSoundUrl(e.target.value)}
+                                    placeholder="https://exemplo.com/som.mp3"
+                                />
+                                <Button size="icon" variant="outline" onClick={testSound} title="Testar som">
+                                    <Play className="h-4 w-4" />
+                                </Button>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                                Cole o link direto de um arquivo de áudio (MP3). <br />
+                                Padrão: Caixa Registradora.
+                            </p>
+                        </div>
+
+                        <Button className="w-full bg-[#19406C] hover:bg-[#19406C]/90" onClick={() => {
+                            handleSaveSoundUrl(notificationSoundUrl);
+                            setIsSettingsOpen(false);
+                        }}>
+                            Salvar Alterações
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <main className="flex-grow container mx-auto px-4 py-8 max-w-7xl">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-8">
