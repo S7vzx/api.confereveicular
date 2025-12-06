@@ -53,15 +53,17 @@ export interface VehicleData {
     };
 }
 
-const API_TOKEN = "d467f819227d45912eb4321f5244d91e";
-const BASE_URL = "https://wdapi2.com.br/consulta";
+// Token removed for security - now handled by server.js proxy
+// const API_TOKEN = ""; 
+// const BASE_URL = "/api/consultar"; 
 
 export async function consultarPlaca(placa: string): Promise<VehicleData> {
     // Remove any non-alphanumeric characters for the API request
     const cleanPlate = placa.replace(/[^a-zA-Z0-9]/g, "");
 
     try {
-        const response = await fetch(`${BASE_URL}/${cleanPlate}/${API_TOKEN}`);
+        // Call local proxy instead of external API directly
+        const response = await fetch(`/api/consultar/${cleanPlate}`);
 
         if (!response.ok) {
             throw new Error(`Erro na requisição: ${response.statusText}`);

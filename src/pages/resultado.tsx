@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info, Copy, Printer, Crown, Search, Share2, Check, Bike } from "lucide-react";
+import { ArrowLeft, Lock, Car, FileText, CheckCircle2, DollarSign, Timer, ShieldCheck, Loader2, AlertCircle, User, Info, Copy, Printer, Crown, Search, Share2, Check, Bike, Clock } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
@@ -33,6 +33,19 @@ export default function ResultadoConsulta() {
             try {
                 const data = await consultarPlaca(placa);
                 setVeiculo(data);
+
+                // Save to Recent Searches
+                const history = JSON.parse(localStorage.getItem("recent_searches") || "[]");
+                const newEntry = {
+                    placa: data.placa || placa,
+                    modelo: data.MODELO,
+                    data: new Date().toISOString()
+                };
+                // Filter out duplicates
+                const filtered = history.filter((h: any) => h.placa !== newEntry.placa);
+                filtered.unshift(newEntry);
+                localStorage.setItem("recent_searches", JSON.stringify(filtered.slice(0, 5)));
+
             } catch (err: any) {
                 setError(err.message || "Erro ao consultar placa. Tente novamente.");
             } finally {
@@ -237,6 +250,7 @@ export default function ResultadoConsulta() {
                         variant="outline"
                         className="h-12 px-6 rounded-xl gap-2 bg-white text-gray-600 border-gray-200 hover:border-[#19406C] hover:bg-[#19406C]/5 hover:text-[#19406C] shadow-sm transition-all text-base"
                         onClick={() => {
+                            // ... existing copy logic ...
                             const fipeText = veiculo.fipe?.dados?.map(f =>
                                 `- ${f.texto_modelo} (${f.combustivel}): ${f.texto_valor} (Ref: ${f.mes_referencia})`
                             ).join('\n') || 'Não disponível';
@@ -262,7 +276,7 @@ Gerado por Confere Veicular
                             navigator.clipboard.writeText(text);
                             toast({
                                 title: "Copiado com Sucesso!",
-                                description: "Resumo do relatório copiado para a área de transferência.",
+                                description: "Resumo do relatório copiado.",
                                 className: "bg-[#19406C] text-white border-none"
                             });
                         }}
@@ -473,6 +487,28 @@ Gerado por Confere Veicular
                     </div>
                 </div>
 
+            </div>
+
+            {/* Consultas Recentes Section */}
+            <div className="container mx-auto px-4 max-w-5xl mb-12">
+                <div className="flex items-center gap-3 mb-6">
+                    <Clock className="w-6 h-6 text-gray-400" />
+                    <h3 className="text-lg font-bold text-gray-700">Consultas Recentes</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {JSON.parse(localStorage.getItem("recent_searches") || "[]").map((item: any, i: number) => (
+                        <div key={i} onClick={() => navigate(`/resultado?placa=${item.placa}`)} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all flex justify-between items-center group">
+                            <div>
+                                <div className="font-bold text-[#19406C]">{item.placa}</div>
+                                <div className="text-xs text-gray-500 truncate max-w-[150px]">{item.modelo}</div>
+                            </div>
+                            <ArrowLeft className="w-4 h-4 text-gray-300 group-hover:text-[#00Cca7] rotate-180 transition-colors" />
+                        </div>
+                    ))}
+                    {JSON.parse(localStorage.getItem("recent_searches") || "[]").length === 0 && (
+                        <p className="text-gray-400 text-sm col-span-3">Nenhuma consulta recente encontrada.</p>
+                    )}
+                </div>
             </div>
 
             <MinimalFooter />
