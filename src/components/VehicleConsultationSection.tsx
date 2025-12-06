@@ -426,6 +426,7 @@ const VehicleConsultationSection = memo(() => {
                       src="/uploads/c044ffa8-9ef0-478d-8ad6-c3f980adca44.png"
                       alt="ConfereVeicular Logo"
                       className="w-6 h-6"
+                      loading="lazy"
                     />
                     {consultationInfo.title}
                   </DialogTitle>
@@ -444,6 +445,7 @@ const VehicleConsultationSection = memo(() => {
                           src="/uploads/a62780f5-0882-41d8-9fab-983f3dc2509b.png"
                           alt="Exemplo de CRV - Certificado de Registro de Veículo"
                           className="w-full max-w-xs h-28 object-cover rounded-lg border"
+                          loading="lazy"
                         />
                         <p className="text-xs text-muted-foreground text-center">
                           CRV - Certificado de Registro de Veículo (documento azul)

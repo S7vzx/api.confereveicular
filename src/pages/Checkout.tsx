@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Shield, Lock, Check, CreditCard, Tag, ArrowRight, Copy, QrCode } from "lucide-react";
+import TrustIndicators from "@/components/social-proof/TrustIndicators";
+import RecentPurchases from "@/components/RecentPurchases";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -535,6 +537,7 @@ const Checkout = () => {
             </main>
 
             <MinimalFooter />
+            <RecentPurchases />
         </div>
     );
 };

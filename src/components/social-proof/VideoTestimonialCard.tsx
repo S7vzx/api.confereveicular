@@ -28,10 +28,9 @@ const VideoTestimonialCard: React.FC<VideoTestimonialCardProps> = ({ video }) =>
   };
 
   return (
-    <div className="group p-2 transition-transform duration-500 hover:-translate-y-2 h-full">
-      <Card className="bg-card border border-border shadow-medium group-hover:shadow-extra-large transition-all duration-500 overflow-hidden relative h-full flex flex-col">
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    <div className="group p-2 h-full">
+      <Card className="bg-white border-0 shadow-soft hover:shadow-medium transition-all duration-300 overflow-hidden relative h-full flex flex-col rounded-2xl">
+        {/* Hover overlay removed for cleaner look */}
 
         <CardContent className="p-0 relative z-10 flex flex-col h-full">
           {/* Video Area */}

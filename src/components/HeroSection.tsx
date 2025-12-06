@@ -253,7 +253,9 @@ const HeroSection = memo(() => {
                 <img
                   src="/uploads/f5472cd0-a719-4870-a846-6a0f274a9336.png"
                   alt="Especialista em consultas veiculares - ConfereVeicular"
-                  className="w-full max-w-sm sm:max-w-md lg:max-w-2xl h-auto object-contain transition-all duration-700 ease-out transform group-hover:scale-105 group-hover:-translate-y-2"
+                  className="w-full max-w-sm sm:max-w-md lg:max-w-2xl h-auto object-contain transition-all duration-700 ease-out transform group-hover:scale-105 group-hover:-translate-y-2 filter group-hover:brightness-110 group-hover:drop-shadow-2xl"
+                  fetchPriority="high"
+                  decoding="sync"
                 />
               </div>
             </div>

@@ -142,9 +142,8 @@ const pagarme = {
             console.error('Supabase error:', error);
             throw new Error('Failed to delete coupon');
         }
-
-        return { message: 'Coupon deleted' };
     },
+
     validateCoupon: async (code: string) => {
         const { data, error } = await supabase
             .from('coupons')
@@ -172,10 +171,18 @@ const pagarme = {
     },
     markAsPaid: async (orderId: string, token: string) => {
         // Update directly in Supabase instead of calling server
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: 'paid' })
-            .or(`external_id.eq.${orderId},id.eq.${orderId}`);
+        // Check if orderId is a UUID to determine which column to query
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId);
+
+        let query = supabase.from('orders').update({ status: 'paid' });
+
+        if (isUUID) {
+            query = query.eq('id', orderId);
+        } else {
+            query = query.eq('external_id', orderId);
+        }
+
+        const { error } = await query;
 
         if (error) {
             console.error('Supabase error:', error);

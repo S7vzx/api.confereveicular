@@ -37,10 +37,10 @@ const OptimizedImage = memo<OptimizedImageProps>(({
       {isLoading && (
         <div className="absolute inset-0">
           {placeholder || (
-            <img 
-              src={generatedPlaceholder} 
-              alt="" 
-              className="w-full h-full object-cover opacity-50" 
+            <img
+              src={generatedPlaceholder}
+              alt=""
+              className="w-full h-full object-cover opacity-50"
             />
           )}
         </div>

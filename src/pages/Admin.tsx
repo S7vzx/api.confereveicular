@@ -11,12 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import MinimalFooter from "@/components/MinimalFooter";
 import pagarme from "@/services/pagarme";
-import { RefreshCw, CheckCircle, XCircle, Clock, DollarSign, Users, BarChart3, TrendingUp, Calendar, Download, Tag, Trash2, BellRing, Filter, PieChart, Sun, Moon, CheckSquare } from "lucide-react";
+import { RefreshCw, CheckCircle, XCircle, Clock, DollarSign, Users, BarChart3, TrendingUp, Calendar, Download, Tag, Trash2, BellRing, Filter, PieChart, Sun, Moon, CheckSquare, ShieldAlert } from "lucide-react";
 import { useTheme } from "next-themes";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell, Legend } from 'recharts';
 
-
-
+import { GridBackground } from "@/components/GridBackground";
 // Notification sound
 const NOTIFICATION_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
@@ -30,11 +29,19 @@ const Admin = () => {
     const [dateFilter, setDateFilter] = useState("7d"); // 7d, 30d, all
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [coupons, setCoupons] = useState<any[]>([]);
-    const [stats, setStats] = useState({ totalSales: 0, totalOrders: 0, paidOrders: 0 });
+    const [stats, setStats] = useState({
+        totalSales: 0,
+        totalOrders: 0,
+        paidOrders: 0,
+        avgTicket: 0,
+        trends: { sales: 0, orders: 0 },
+        topProducts: [] as { name: string, count: number, revenue: number }[]
+    });
 
     // Audio ref for notifications
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const previousOrderCountRef = useRef(0);
+    const [hasNewNotification, setHasNewNotification] = useState(false);
 
     // New Coupon State
     const [newCouponCode, setNewCouponCode] = useState("");
@@ -42,49 +49,56 @@ const Admin = () => {
 
     const { toast } = useToast();
     const { theme, setTheme } = useTheme();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    // Initialize audio
+    // Function to filter orders by date
+    const filterOrdersByDate = (allOrders: any[], period: string) => {
+        const now = new Date();
+        let startDate = new Date();
+
+        if (period === '7d') {
+            startDate.setDate(now.getDate() - 7);
+        } else if (period === '30d') {
+            startDate.setDate(now.getDate() - 30);
+        } else {
+            return allOrders; // 'all' period
+        }
+
+        return allOrders.filter(order => new Date(order.created_at) >= startDate);
+    };
+
+    // Authentication
     useEffect(() => {
-        audioRef.current = new Audio(NOTIFICATION_SOUND);
+        const storedToken = localStorage.getItem("admin_token");
+        if (storedToken) {
+            setToken(storedToken);
+            setIsAuthenticated(true);
+        }
     }, []);
 
     const handleLogin = async () => {
+        setIsLoading(true);
         try {
             const data = await pagarme.login(password);
-            if (data.token) {
-                setToken(data.token);
-                setIsAuthenticated(true);
-                toast({ title: "Login realizado com sucesso!" });
-            }
+            localStorage.setItem("admin_token", data.token);
+            setToken(data.token);
+            setIsAuthenticated(true);
+            toast({ title: "Login bem-sucedido!" });
         } catch (error) {
-            toast({
-                title: "Falha na autenticação",
-                description: "Senha incorreta.",
-                variant: "destructive"
-            });
+            console.error("Login error:", error);
+            toast({ title: "Senha incorreta", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
         }
     };
-
-    // Trigger data fetching when authenticated
-    useEffect(() => {
-        if (isAuthenticated && token) {
-            fetchOrders(token);
-            fetchCoupons(token);
-
-            const interval = setInterval(() => {
-                fetchOrders(token);
-            }, 30000);
-
-            return () => clearInterval(interval);
-        }
-    }, [isAuthenticated, token]);
 
     const fetchOrders = async (authToken: string) => {
         setIsLoading(true);
         try {
-            const data = await pagarme.getOrders(authToken);
-            const fetchedOrders = data.data || [];
+            const response = await pagarme.getOrders(authToken);
+            const fetchedOrders = response.data || [];
 
+            setOrders(fetchedOrders);
             // Check for new orders to play sound
             if (previousOrderCountRef.current > 0 && fetchedOrders.length > previousOrderCountRef.current) {
                 const newOrdersCount = fetchedOrders.length - previousOrderCountRef.current;
@@ -94,10 +108,10 @@ const Admin = () => {
                     className: "bg-green-500 text-white border-none"
                 });
                 audioRef.current?.play().catch(e => console.log("Audio play failed interaction required:", e));
+                setHasNewNotification(true);
+                setTimeout(() => setHasNewNotification(false), 5000);
             }
             previousOrderCountRef.current = fetchedOrders.length;
-
-            setOrders(fetchedOrders);
             calculateStats(fetchedOrders, dateFilter);
 
         } catch (error) {
@@ -112,35 +126,88 @@ const Admin = () => {
         }
     };
 
-    const calculateStats = (currentOrders: any[], period: string) => {
-        const filtered = filterOrdersByDate(currentOrders, period);
+    // Initial data fetch
+    useEffect(() => {
+        if (isAuthenticated && token) {
+            fetchOrders(token);
+            fetchCoupons(token);
+            // Set up polling for new orders every 30 seconds
+            const interval = setInterval(() => {
+                fetchOrders(token);
+            }, 30000); // 30 seconds
+            return () => clearInterval(interval); // Cleanup on unmount
+        }
+    }, [isAuthenticated, token]);
 
-        const total = filtered
-            .filter((o: any) => o.status === 'paid')
-            .reduce((acc: number, curr: any) => acc + curr.items[0].amount, 0);
+    // Initialize audio ref
+    useEffect(() => {
+        audioRef.current = new Audio(NOTIFICATION_SOUND);
+        audioRef.current.volume = 0.5;
+    }, []);
+
+    // ... (calculateStats function update)
+    const calculateStats = (currentOrders: any[], period: string) => {
+        const now = new Date();
+        const getStartDate = (date: Date, type: string) => {
+            const newDate = new Date(date);
+            if (type === '7d') newDate.setDate(newDate.getDate() - 7);
+            if (type === '30d') newDate.setDate(newDate.getDate() - 30);
+            return newDate;
+        };
+
+        // Current Period
+        const limitCurrent = getStartDate(now, period);
+        const currentPeriodOrders = currentOrders.filter(o => new Date(o.created_at) >= limitCurrent);
+
+        // Previous Period (for trends)
+        const limitPrevious = getStartDate(limitCurrent, period);
+        const previousPeriodOrders = currentOrders.filter(o => {
+            const d = new Date(o.created_at);
+            return d >= limitPrevious && d < limitCurrent;
+        });
+
+        // Sales Aggregates
+        const getSales = (list: any[]) => list
+            .filter(o => o.status === 'paid')
+            .reduce((acc, curr) => acc + curr.items[0].amount, 0);
+
+        const currentSales = getSales(currentPeriodOrders);
+        const previousSales = getSales(previousPeriodOrders);
+
+        const currentPaidCount = currentPeriodOrders.filter(o => o.status === 'paid').length;
+        const previousPaidCount = previousPeriodOrders.filter(o => o.status === 'paid').length;
+
+        // Trend Calculation
+        const calcTrend = (curr: number, prev: number) => {
+            if (prev === 0) return curr > 0 ? 100 : 0;
+            return ((curr - prev) / prev) * 100;
+        };
+
+        // Top Products Logic
+        const productMap: Record<string, { count: number, revenue: number }> = {};
+        currentPeriodOrders.filter(o => o.status === 'paid').forEach(order => {
+            // Assumes description contains product name, fallback to "Consulta Veicular"
+            const name = order.items[0]?.description || "Consulta Veicular";
+            if (!productMap[name]) productMap[name] = { count: 0, revenue: 0 };
+            productMap[name].count += 1;
+            productMap[name].revenue += order.items[0].amount;
+        });
+
+        const topProducts = Object.entries(productMap)
+            .map(([name, data]) => ({ name, ...data }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 5);
 
         setStats({
-            totalSales: total,
-            totalOrders: filtered.length,
-            paidOrders: filtered.filter((o: any) => o.status === 'paid').length
-        });
-    };
-
-    const filterOrdersByDate = (orderList: any[], period: string) => {
-        const now = new Date();
-        return orderList.filter(order => {
-            const orderDate = new Date(order.created_at);
-            if (period === '7d') {
-                const limit = new Date(now);
-                limit.setDate(limit.getDate() - 7);
-                return orderDate >= limit;
-            }
-            if (period === '30d') {
-                const limit = new Date(now);
-                limit.setDate(limit.getDate() - 30);
-                return orderDate >= limit;
-            }
-            return true; // 'all'
+            totalSales: currentSales,
+            totalOrders: currentPeriodOrders.length,
+            paidOrders: currentPaidCount,
+            avgTicket: currentPaidCount > 0 ? currentSales / currentPaidCount : 0,
+            trends: {
+                sales: calcTrend(currentSales, previousSales),
+                orders: calcTrend(currentPaidCount, previousPaidCount)
+            },
+            topProducts
         });
     };
 
@@ -310,6 +377,21 @@ const Admin = () => {
         return Object.entries(breakdown).map(([name, value]) => ({ name, value }));
     }, [orders, dateFilter]);
 
+    // Heatmap Data (Sales by Hour)
+    const heatmapData = useMemo(() => {
+        const hours = Array(24).fill(0).map((_, i) => ({ hour: `${i} h`, count: 0 }));
+        const activeOrders = filterOrdersByDate(orders, dateFilter).filter(o => o.status === 'paid');
+
+        activeOrders.forEach(order => {
+            const date = new Date(order.created_at);
+            const hour = date.getHours();
+            if (hours[hour]) {
+                hours[hour].count += 1;
+            }
+        });
+        return hours;
+    }, [orders, dateFilter]);
+
     // Sales Funnel Data
     const funnelData = useMemo(() => {
         const activeOrders = filterOrdersByDate(orders, dateFilter);
@@ -353,78 +435,65 @@ const Admin = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-950 flex flex-col justify-center items-center p-4">
-                <Card className="w-full max-w-sm border-none shadow-2xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl">
-                    <CardHeader>
-                        <CardTitle className="text-center text-2xl font-bold text-primary">Acesso Administrativo</CardTitle>
+            <div className="min-h-screen bg-[#F8F9FA] flex flex-col justify-center items-center p-4 relative overflow-hidden">
+                <GridBackground />
+                <div className="absolute top-0 w-full h-full bg-gradient-to-b from-transparent via-white/50 to-white/80 pointer-events-none" />
+
+                <Card className="w-full max-w-[400px] border border-white/40 shadow-[0_20px_50px_rgba(8,_112,_184,_0.07)] bg-white/80 backdrop-blur-xl rounded-2xl p-2 relative z-10 animate-in fade-in zoom-in-95 duration-700">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/50 to-transparent opacity-50 rounded-2xl pointer-events-none" />
+                    <CardHeader className="pb-10 pt-8 relative">
+                        <div className="mx-auto w-auto h-16 flex items-center justify-center mb-6">
+                            <img
+                                src="/uploads/logo nova.png"
+                                alt="Confere Veicular"
+                                className="h-full w-auto object-contain drop-shadow-sm"
+                            />
+                        </div>
+                        <CardTitle className="text-center text-[#1A3C6D] text-2xl font-extrabold tracking-tight">
+                            Acesso Administrativo
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Input
-                            type="password"
-                            placeholder="Senha"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                            className="bg-white/50 dark:bg-zinc-800/50"
-                        />
-                        <Button className="w-full bg-primary hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/20" onClick={handleLogin}>
-                            Entrar
+                    <CardContent className="space-y-6 pb-8 px-8 relative">
+                        <div className="space-y-2 group">
+                            <div className="relative">
+                                <Input
+                                    type="password"
+                                    placeholder="Senha de acesso"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                                    className="h-12 bg-gray-50/50 border-gray-200 text-gray-800 placeholder:text-gray-400 focus-visible:ring-[#1A3C6D] focus-visible:ring-offset-0 rounded-xl text-base pl-4 transition-all group-hover:bg-white group-hover:shadow-sm"
+                                />
+                            </div>
+                        </div>
+                        <Button
+                            className="w-full h-12 bg-[#19406C] hover:bg-[#15355a] text-white font-bold rounded-xl text-base shadow-lg shadow-blue-900/10 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                            onClick={handleLogin}
+                        >
+                            Entrar no Painel
                         </Button>
+
+                        <div className="mt-6 flex items-start gap-3 bg-blue-50/50 p-3 rounded-lg border border-blue-100/50">
+                            <ShieldAlert className="w-4 h-4 text-[#19406C] shrink-0 mt-0.5" />
+                            <div className="text-xs text-slate-600 leading-relaxed">
+                                <span className="font-semibold text-[#19406C] block mb-0.5">Ambiente Seguro</span>
+                                Acesso monitorado e restrito apenas a pessoal autorizado.
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
+                <p className="mt-8 text-center text-xs text-gray-400 z-10 font-medium">
+                    &copy; 2025 Confere Veicular Consultoria LTDA
+                </p>
             </div>
         );
     }
-
     return (
-        <div className="min-h-screen bg-gray-50/50 dark:bg-zinc-950 transition-colors duration-300 flex flex-col font-sans">
+        <div className="min-h-screen bg-[#F8F9FA] dark:bg-zinc-950 transition-colors duration-300 flex flex-col font-sans">
             <header className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-zinc-800/50 py-4 sticky top-0 z-50 shadow-sm transition-all">
                 <div className="container mx-auto px-4 flex justify-between items-center max-w-7xl">
                     <img src="/uploads/logo nova.png" alt="Confere Veicular" className="h-8 md:h-10 w-auto" />
                     <div className="flex gap-2">
-                        <div className="hidden md:flex items-center gap-1 mr-4 bg-gray-100 dark:bg-zinc-800 p-1 rounded-lg border border-gray-200 dark:border-zinc-700">
-                            <Button
-                                variant={dateFilter === "7d" ? "secondary" : "ghost"}
-                                size="sm"
-                                onClick={() => setDateFilter("7d")}
-                                className={`text-xs h-8 px-3 rounded-md transition-all ${dateFilter === "7d"
-                                    ? "bg-white dark:bg-zinc-700 text-primary dark:text-white shadow-sm font-semibold"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                    }`}
-                            >
-                                7 Dias
-                            </Button>
-                            <Button
-                                variant={dateFilter === "30d" ? "secondary" : "ghost"}
-                                size="sm"
-                                onClick={() => setDateFilter("30d")}
-                                className={`text-xs h-8 px-3 rounded-md transition-all ${dateFilter === "30d"
-                                    ? "bg-white dark:bg-zinc-700 text-primary dark:text-white shadow-sm font-semibold"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                    }`}
-                            >
-                                30 Dias
-                            </Button>
-                            <Button
-                                variant={dateFilter === "all" ? "secondary" : "ghost"}
-                                size="sm"
-                                onClick={() => setDateFilter("all")}
-                                className={`text-xs h-8 px-3 rounded-md transition-all ${dateFilter === "all"
-                                    ? "bg-white dark:bg-zinc-700 text-primary dark:text-white shadow-sm font-semibold"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                                    }`}
-                            >
-                                Tudo
-                            </Button>
-                        </div>
-                        <Button variant="outline" onClick={downloadCSV} className="gap-2 hidden md:flex">
-                            <Download className="w-4 h-4" />
-                            Exportar CSV
-                        </Button>
-                        <Button variant="outline" onClick={() => { if (token) { fetchOrders(token); fetchCoupons(token); } }} disabled={isLoading} className="gap-2">
-                            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                            Atualizar
-                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -434,46 +503,100 @@ const Admin = () => {
             </header>
 
             <main className="flex-grow container mx-auto px-4 py-8 max-w-7xl">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-primary flex items-center gap-2 tracking-tight">
-                            Dashboard <BellRing className="w-5 h-5 text-yellow-500 animate-pulse" />
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">Visão geral financeira e de vendas</p>
+                        <h2 className="text-3xl font-extrabold text-foreground tracking-tight mb-2">Dashboard de Vendas</h2>
+                        <p className="text-muted-foreground">Visão geral do desempenho de suas consultas veiculares.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Notification Bell */}
+                        <div className={`mr-2 p-2 rounded-full transition-all duration-300 ${hasNewNotification ? 'bg-red-100 text-red-600 animate-bounce' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'}`}>
+                            <BellRing className={`w-6 h-6 ${hasNewNotification ? 'fill-current' : ''}`} />
+                        </div>
+                        <Select value={dateFilter} onValueChange={setDateFilter}>
+                            <SelectTrigger className="w-[140px] shadow-sm bg-card text-card-foreground border-border">
+                                <Calendar className="w-4 h-4 mr-2" />
+                                <SelectValue placeholder="Período" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                                <SelectItem value="all">Todo o período</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Button
+                            variant="outline"
+                            className="shadow-sm bg-card text-card-foreground border-border hover:bg-muted"
+                            onClick={() => {
+                                fetchOrders(token!);
+                                toast({ title: "Atualizando dados..." });
+                            }}
+                        >
+                            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            Atualizar
+                        </Button>
+                        <Button variant="outline" onClick={downloadCSV} className="shadow-sm bg-card text-card-foreground border-border hover:bg-muted">
+                            <Download className="w-4 h-4 mr-2" />
+                            Exportar CSV
+                        </Button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-                    <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-900/50">
-                        <CardContent className="pt-6 flex items-center gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
+                    <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-800">
+                        <CardContent className="pt-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground font-medium mb-1">Faturamento Total</p>
+                                <h3 className="text-3xl font-bold text-primary tracking-tight">{formatCurrency(stats.totalSales)}</h3>
+                                <div className={`flex items-center text-xs font-bold mt-2 ${stats.trends.sales >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {stats.trends.sales >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingUp className="w-3 h-3 mr-1 rotate-180" />}
+                                    {Math.abs(stats.trends.sales).toFixed(1)}% vs anterior
+                                </div>
+                            </div>
                             <div className="p-4 bg-green-100/50 dark:bg-green-900/20 rounded-2xl text-green-600 dark:text-green-400 shadow-inner">
                                 <DollarSign className="w-8 h-8" />
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Faturamento ({dateFilter})</p>
-                                <h3 className="text-3xl font-bold text-primary tracking-tight">{formatCurrency(stats.totalSales)}</h3>
-                            </div>
                         </CardContent>
                     </Card>
-                    <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-900/50">
-                        <CardContent className="pt-6 flex items-center gap-4">
+
+                    <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-800">
+                        <CardContent className="pt-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground font-medium mb-1">Passaram no Checkout</p>
+                                <h3 className="text-3xl font-bold text-primary tracking-tight">{stats.paidOrders}</h3>
+                                <div className={`flex items-center text-xs font-bold mt-2 ${stats.trends.orders >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {stats.trends.orders >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingUp className="w-3 h-3 mr-1 rotate-180" />}
+                                    {Math.abs(stats.trends.orders).toFixed(1)}% vs anterior
+                                </div>
+                            </div>
                             <div className="p-4 bg-blue-100/50 dark:bg-blue-900/20 rounded-2xl text-blue-600 dark:text-blue-400 shadow-inner">
                                 <CheckCircle className="w-8 h-8" />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-800">
+                        <CardContent className="pt-6 flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Vendas Aprovadas</p>
-                                <h3 className="text-3xl font-bold text-primary tracking-tight">{stats.paidOrders}</h3>
+                                <p className="text-sm text-muted-foreground font-medium mb-1">Ticket Médio</p>
+                                <h3 className="text-3xl font-bold text-primary tracking-tight">{formatCurrency(stats.avgTicket)}</h3>
+                                <p className="text-xs text-muted-foreground mt-2">Por pedido pago</p>
+                            </div>
+                            <div className="p-4 bg-purple-100/50 dark:bg-purple-900/20 rounded-2xl text-purple-600 dark:text-purple-400 shadow-inner">
+                                <Tag className="w-8 h-8" />
                             </div>
                         </CardContent>
                     </Card>
-                    <Card className="border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-900/50">
-                        <CardContent className="pt-6 flex items-center gap-4">
+
+                    <Card className="border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-800">
+                        <CardContent className="pt-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-muted-foreground font-medium mb-1">Total de Pedidos</p>
+                                <h3 className="text-3xl font-bold text-primary tracking-tight">{stats.totalOrders}</h3>
+                                <p className="text-xs text-muted-foreground mt-2">Inclui pendentes/falhas</p>
+                            </div>
                             <div className="p-4 bg-orange-100/50 dark:bg-orange-900/20 rounded-2xl text-orange-600 dark:text-orange-400 shadow-inner">
                                 <Users className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Total de Pedidos</p>
-                                <h3 className="text-3xl font-bold text-primary tracking-tight">{stats.totalOrders}</h3>
                             </div>
                         </CardContent>
                     </Card>
@@ -488,7 +611,41 @@ const Admin = () => {
 
                     <TabsContent value="sales" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                            <Card className="lg:col-span-2 shadow-md border-none lg:hover:shadow-lg transition-all dark:bg-zinc-900/50">
+                            {/* Top Products Card - New Addition */}
+                            <Card className="lg:col-span-1 shadow-md border-none lg:hover:shadow-lg transition-all dark:bg-zinc-900/90 bg-card">
+                                <CardHeader>
+                                    <CardTitle className="text-primary flex items-center gap-2">
+                                        <PieChart className="w-5 h-5 text-accent" />
+                                        Top Produtos
+                                    </CardTitle>
+                                    <CardDescription>O que seus clientes mais compram</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-4">
+                                        {stats.topProducts.length > 0 ? (
+                                            stats.topProducts.map((product, index) => (
+                                                <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                                            {index + 1}
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-foreground line-clamp-1" title={product.name}>{product.name}</p>
+                                                            <p className="text-xs text-muted-foreground">{product.count} vendas</p>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-primary">{formatCurrency(product.revenue)}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-8 text-muted-foreground">Sem dados de vendas ainda</div>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Sales Chart - Modified to take up 2 cols */}
+                            <Card className="lg:col-span-2 shadow-md border-none lg:hover:shadow-lg transition-all dark:bg-zinc-900/90 bg-card">
                                 <CardHeader>
                                     <CardTitle className="text-primary flex items-center gap-2">
                                         <TrendingUp className="w-5 h-5 text-gray-500" />
@@ -503,7 +660,7 @@ const Admin = () => {
                                                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} dy={10} />
-                                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(value) => `R$${value}`} dx={-10} />
+                                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} tickFormatter={(value) => `R$${value} `} dx={-10} />
                                                     <Tooltip
                                                         cursor={{ fill: theme === 'dark' ? '#27272a' : '#F3F4F6' }}
                                                         contentStyle={{
@@ -514,7 +671,7 @@ const Admin = () => {
                                                             color: theme === 'dark' ? '#fff' : '#000'
                                                         }}
                                                         itemStyle={{ color: theme === 'dark' ? '#fff' : '#000' }}
-                                                        formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')}`, 'Vendas']}
+                                                        formatter={(value: number) => [`R$ ${value.toFixed(2).replace('.', ',')} `, 'Vendas']}
                                                     />
                                                     <Bar dataKey="amount" fill="#19406C" radius={[4, 4, 0, 0]} barSize={40} />
                                                 </BarChart>
@@ -544,7 +701,7 @@ const Admin = () => {
                                                     <div
                                                         className="h-full rounded-full transition-all duration-1000 ease-out"
                                                         style={{
-                                                            width: `${stats.totalOrders > 0 ? (stage.value / stats.totalOrders) * 100 : 0}%`,
+                                                            width: `${stats.totalOrders > 0 ? (stage.value / stats.totalOrders) * 100 : 0}% `,
                                                             backgroundColor: stage.fill
                                                         }}
                                                     />
@@ -560,6 +717,41 @@ const Admin = () => {
                                                 Taxa de Aprovação Global: <span className="font-bold text-green-600">{stats.totalOrders > 0 ? ((stats.paidOrders / stats.totalOrders) * 100).toFixed(1) : 0}%</span>
                                             </p>
                                         </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                            <Card className="lg:col-span-3 shadow-md border-none lg:hover:shadow-lg transition-all dark:bg-zinc-900/50">
+                                <CardHeader>
+                                    <CardTitle className="text-primary flex items-center gap-2">
+                                        <Clock className="w-5 h-5 text-orange-500" />
+                                        Horários de Pico (Heatmap)
+                                    </CardTitle>
+                                    <CardDescription>Volume de vendas por hora do dia</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="h-[300px] w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={heatmapData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
+                                                <Tooltip
+                                                    cursor={{ fill: theme === 'dark' ? '#27272a' : '#F3F4F6' }}
+                                                    contentStyle={{
+                                                        borderRadius: '12px',
+                                                        border: 'none',
+                                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                                        backgroundColor: theme === 'dark' ? '#18181b' : '#fff',
+                                                        color: theme === 'dark' ? '#fff' : '#000'
+                                                    }}
+                                                    itemStyle={{ color: theme === 'dark' ? '#fff' : '#000' }}
+                                                    formatter={(value: number) => [value, 'Vendas']}
+                                                />
+                                                <Bar dataKey="count" fill="#F97316" radius={[4, 4, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -633,7 +825,6 @@ const Admin = () => {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
                     <TabsContent value="products" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <Card className="shadow-md border-none lg:hover:shadow-lg transition-all dark:bg-zinc-900/50">
@@ -654,10 +845,10 @@ const Admin = () => {
                                                 outerRadius={100}
                                                 fill="#8884d8"
                                                 dataKey="value"
-                                                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                                label={({ name, percent }) => `${(percent * 100).toFixed(0)}% `}
                                             >
                                                 {productData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={theme === 'dark' ? '#18181b' : '#fff'} />
+                                                    <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} stroke={theme === 'dark' ? '#18181b' : '#fff'} />
                                                 ))}
                                             </Pie>
                                             <Tooltip
@@ -891,7 +1082,7 @@ const Admin = () => {
                     </DialogContent>
                 </Dialog>
 
-            </main>
+            </main >
         </div >
     );
 };
