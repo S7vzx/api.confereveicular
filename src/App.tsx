@@ -25,17 +25,23 @@ const AppContent = () => {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem forcedTheme={isAdmin ? undefined : 'light'}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/sobre-nos" element={<SobreNos />} />
-        <Route path="/resultado" element={<ResultadoConsulta />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/termos" element={<Termos />} />
-        <Route path="/privacidade" element={<Privacidade />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/sobre-nos" element={<SobreNos />} />
+          <Route path="/resultado" element={<ResultadoConsulta />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </ThemeProvider>
   );
 };
