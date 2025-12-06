@@ -69,6 +69,27 @@ const pagarme = {
 
         return order;
     },
+    createFreeOrder: async (description: string, customer: any) => {
+        // Create order directly in Supabase for 100% discount
+        const orderId = crypto.randomUUID();
+
+        try {
+            await supabase.from('orders').insert({
+                external_id: orderId,
+                customer_name: customer.name,
+                customer_email: customer.email,
+                customer_document: customer.document,
+                customer_phone: customer.phone || '',
+                amount: 0,
+                status: 'paid', // Automatically paid
+                items: [{ amount: 0, description, quantity: 1 }]
+            });
+            return { id: orderId, status: 'paid' };
+        } catch (error) {
+            console.error('Error creating free order:', error);
+            throw new Error('Erro ao criar pedido gratuito');
+        }
+    },
     getOrder: async (orderId: string) => {
         const response = await fetch(`/api/get-order?id=${orderId}`);
         if (!response.ok) {

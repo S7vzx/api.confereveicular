@@ -138,7 +138,8 @@ const Checkout = () => {
 
         try {
             // Basic amount calculation in cents
-            const amount = Math.round(calculateTotal() * 100);
+            const total = calculateTotal();
+            const amount = Math.round(total * 100);
             const description = `Consulta Veicular Placa ${plate}`;
 
             const customer = {
@@ -147,32 +148,48 @@ const Checkout = () => {
                 document: cpf.replace(/\D/g, '') // Remove non-digits
             };
 
-            const data = await pagarme.createPixTransaction(amount, description, customer);
+            let data;
 
-            if (data.id) {
+            // Check if it is a free order (100% discount)
+            if (amount === 0) {
+                data = await pagarme.createFreeOrder(description, customer);
                 setOrderId(data.id);
+                setStatus('paid');
+                toast({
+                    title: "Sucesso!",
+                    description: "Seu pedido foi confirmado gratuitamente.",
+                    className: "bg-green-600 text-white border-none"
+                });
+                // Stop execution here as we don't need QR code
+                return;
+            } else {
+                data = await pagarme.createPixTransaction(amount, description, customer);
+
+                if (data.id) {
+                    setOrderId(data.id);
+                }
+
+                const charge = data.charges[0];
+                const transaction = charge.last_transaction;
+
+                setPixData({
+                    qr_code: transaction.qr_code,
+                    qr_code_url: transaction.qr_code_url,
+                    expires_at: transaction.expires_at
+                });
+
+                toast({
+                    title: "Pedido gerado!",
+                    description: "Utilize o QR Code para realizar o pagamento.",
+                    className: "bg-green-600 text-white border-none"
+                });
             }
-
-            const charge = data.charges[0];
-            const transaction = charge.last_transaction;
-
-            setPixData({
-                qr_code: transaction.qr_code,
-                qr_code_url: transaction.qr_code_url,
-                expires_at: transaction.expires_at
-            });
-
-            toast({
-                title: "Pedido gerado!",
-                description: "Utilize o QR Code para realizar o pagamento.",
-                className: "bg-green-600 text-white border-none"
-            });
 
         } catch (error: any) {
             console.error("Payment error:", error);
             toast({
-                title: "Erro no pagamento",
-                description: error.message || "Não foi possível gerar o pagamento. Tente novamente.",
+                title: "Erro no pedido",
+                description: error.message || "Não foi possível processar o pedido. Tente novamente.",
                 variant: "destructive"
             });
         } finally {
@@ -207,8 +224,14 @@ const Checkout = () => {
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Check className="w-10 h-10 text-green-600" />
                         </div>
-                        <h2 className="text-2xl font-bold text-[#19406C] mb-2">Pagamento Confirmado!</h2>
-                        <p className="text-gray-600 mb-8">Recebemos seu pagamento. Seu relatório completo já está sendo processado.</p>
+                        <h2 className="text-2xl font-bold text-[#19406C] mb-2">
+                            {discount === 1 ? "Pedido Confirmado!" : "Pagamento Confirmado!"}
+                        </h2>
+                        <p className="text-gray-600 mb-8">
+                            {discount === 1
+                                ? "Seu pedido foi recebido e seu relatório já está sendo processado."
+                                : "Recebemos seu pagamento. Seu relatório completo já está sendo processado."}
+                        </p>
 
                         <div className="space-y-4">
                             <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-green-800 text-sm">
